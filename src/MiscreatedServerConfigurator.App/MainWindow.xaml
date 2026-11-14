@@ -1,0 +1,202 @@
+<Window x:Class="MiscreatedServerConfigurator.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:MiscreatedServerConfigurator.App.Views"
+        Title="{Binding WindowTitle}"
+        Width="1240"
+        Height="820"
+        MinWidth="960"
+        MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        Closing="OnClosing">
+  <Window.CommandBindings>
+    <CommandBinding Command="New" CanExecute="New_CanExecute" Executed="New_Executed" />
+    <CommandBinding Command="Open" CanExecute="Open_CanExecute" Executed="Open_Executed" />
+    <CommandBinding Command="Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
+    <CommandBinding Command="SaveAs" CanExecute="SaveAs_CanExecute" Executed="SaveAs_Executed" />
+  </Window.CommandBindings>
+  <Window.InputBindings>
+    <KeyBinding Key="N" Modifiers="Control" Command="New" />
+    <KeyBinding Key="O" Modifiers="Control" Command="Open" />
+    <KeyBinding Key="S" Modifiers="Control" Command="Save" />
+    <KeyBinding Key="S" Modifiers="Control+Shift" Command="SaveAs" />
+  </Window.InputBindings>
+
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Background="White" Padding="6,2">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New from template" Command="New" InputGestureText="Ctrl+N" />
+        <MenuItem Header="_Open..." Command="Open" InputGestureText="Ctrl+O" />
+        <Separator />
+        <MenuItem Header="_Save" Command="Save" InputGestureText="Ctrl+S" />
+        <MenuItem Header="Save _As..." Command="SaveAs" InputGestureText="Ctrl+Shift+S" />
+        <Separator />
+        <MenuItem Header="E_xit" Click="Exit_Click" />
+      </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="_About" Click="About_Click" />
+      </MenuItem>
+    </Menu>
+
+    <Border DockPanel.Dock="Top" Background="White" BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,0,0,1" Padding="16,10">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Content="New" Command="New" Style="{StaticResource ToolbarButton}" />
+          <Button Content="Open" Command="Open" Style="{StaticResource ToolbarButton}" />
+          <Button Content="Save" Command="Save" Style="{StaticResource PrimaryButton}" />
+          <Button Content="Save as" Command="SaveAs" Style="{StaticResource ToolbarButton}" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="Find" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Brush.Muted}" />
+          <TextBox Width="220"
+                   Style="{StaticResource InputBox}"
+                   MinHeight="0"
+                   ToolTip="Filter the current section by CVAR name, description, or note."
+                   Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,16,0">
+          <TextBlock Text="Unused CVARs" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ComboBox Width="180"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding UnusedOptions}"
+                    DisplayMemberPath="Label"
+                    SelectedValuePath="Value"
+                    SelectedValue="{Binding UnusedOutput}"
+                    ToolTip="An unused CVAR is not a live setting. The server uses its factory default." />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Border DockPanel.Dock="Top" Background="{StaticResource Brush.Window}" Padding="16,6,16,0">
+      <TextBlock Style="{StaticResource MutedText}"
+                 Text="Unused CVARs are not written as live settings, so the server keeps its factory default. Comment them out to leave them in the file, or omit them." />
+    </Border>
+
+    <Border DockPanel.Dock="Bottom" Background="White" BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,1,0,0" Padding="16,8">
+      <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Brush.Muted}" TextTrimming="CharacterEllipsis" />
+    </Border>
+
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="248" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,0,1,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     Margin="14,14,14,8"
+                     FontWeight="SemiBold"
+                     Text="Sections" />
+          <ListBox ItemsSource="{Binding Sections}"
+                   SelectedItem="{Binding SelectedSection}"
+                   BorderThickness="0"
+                   Background="Transparent"
+                   ItemContainerStyle="{StaticResource NavItem}"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <DockPanel>
+                  <TextBlock DockPanel.Dock="Right"
+                             MinWidth="24"
+                             TextAlignment="Right"
+                             Foreground="{StaticResource Brush.Muted}"
+                             Text="{Binding EnabledCount}"
+                             ToolTip="Live settings in this section" />
+                  <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                </DockPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+
+      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,24,28" MaxWidth="1100" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding SelectedSection.Title}" />
+
+          <Border Margin="0,8,0,12"
+                  Padding="12,10"
+                  Background="{StaticResource Brush.WarnBg}"
+                  BorderBrush="{StaticResource Brush.WarnLine}"
+                  BorderThickness="1"
+                  CornerRadius="6">
+            <Border.Style>
+              <Style TargetType="Border">
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Warnings.Count}" Value="0">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Border.Style>
+            <ItemsControl ItemsSource="{Binding Warnings}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{StaticResource Brush.WarnInk}" Margin="0,2" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+
+          <Border Margin="0,0,0,12"
+                  Padding="12,10"
+                  Background="{StaticResource Brush.InfoBg}"
+                  BorderBrush="{StaticResource Brush.Line}"
+                  BorderThickness="1"
+                  CornerRadius="6"
+                  Visibility="{Binding SelectedSection.Note, Converter={StaticResource StringToVis}}">
+            <TextBlock Text="{Binding SelectedSection.Note}" TextWrapping="Wrap" Foreground="{StaticResource Brush.InfoInk}" />
+          </Border>
+
+          <Expander Header="About this file format"
+                    Margin="0,0,0,12"
+                    Visibility="{Binding SelectedSection.PreambleText, Converter={StaticResource StringToVis}}">
+            <TextBlock Margin="0,8,0,0"
+                       Style="{StaticResource MutedText}"
+                       Text="{Binding SelectedSection.PreambleText}" />
+          </Expander>
+
+          <ItemsControl ItemsSource="{Binding SelectedSection.Blocks}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}">
+                  <TextBlock Style="{StaticResource BlockTitle}" Text="{Binding Title}" />
+                  <TextBlock Style="{StaticResource MutedText}"
+                             Margin="0,0,0,6"
+                             Text="{Binding HeaderText}"
+                             Visibility="{Binding HeaderText, Converter={StaticResource StringToVis}}" />
+                  <TextBlock Style="{StaticResource MutedText}"
+                             Margin="0,0,0,8"
+                             Text="{Binding NotesText}"
+                             Visibility="{Binding NotesText, Converter={StaticResource StringToVis}}" />
+                  <ItemsControl ItemsSource="{Binding Rows}"
+                                Visibility="{Binding ShowRows, Converter={StaticResource BoolToVis}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <views:CvarEditorRow Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <views:FactionDamageMatrixView DataContext="{Binding SelectedSection.Matrix}"
+                                         Margin="0,8,0,0"
+                                         Visibility="{Binding SelectedSection.ShowMatrix, Converter={StaticResource BoolToVis}}" />
+
+          <TextBlock Margin="0,16,0,0"
+                     Style="{StaticResource MutedText}"
+                     Text="No CVARs match."
+                     Visibility="{Binding SelectedSection.ShowEmptySearch, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
+</Window>

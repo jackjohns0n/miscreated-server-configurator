@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MiscreatedServerConfigurator.Core</RootNamespace>
+    <AssemblyName>MiscreatedServerConfigurator.Core</AssemblyName>
+    <Description>hosting.cfg parsing, CVAR catalog, and writing for Miscreated dedicated servers.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\samples\hosting.cfg">
+      <LogicalName>MiscreatedServerConfigurator.Core.Resources.hosting.cfg</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
