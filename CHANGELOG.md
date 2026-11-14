@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Page titles, group headings, and monospace CVAR names use the theme text color. Those styles had been replacing the themed text style and falling back to black.
+- Body text is 15pt. Page titles are 24pt and group headings 18pt, both semibold.
+- The Theme and Unused CVARs boxes are 32px tall, with room for the full label, in line with the Find box and the toolbar buttons.
 - Dark theme paints the page behind the editor cards. That area was the system window color, which stays white. Secondary text is darker in the light theme and lighter in the dark theme so helper lines meet WCAG AA on those backgrounds.
 - The Theme and Unused CVARs boxes show their labels (Follow system, Light, Dark; Comment them out, Omit them) instead of the option type name.
 - The damage-matrix explanation is shown only on the faction damage matrix page.

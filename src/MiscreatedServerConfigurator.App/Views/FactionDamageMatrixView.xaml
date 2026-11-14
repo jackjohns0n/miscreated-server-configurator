@@ -4,7 +4,7 @@
              xmlns:views="clr-namespace:MiscreatedServerConfigurator.App.Views">
   <UserControl.Resources>
     <DataTemplate x:Key="PresentCell">
-      <Border Width="76"
+      <Border Width="88"
               Height="36"
               Margin="1"
               Padding="3,2"
@@ -22,7 +22,7 @@
                    Width="40"
                    Padding="2,1"
                    FontFamily="Consolas"
-                   FontSize="12"
+                   FontSize="14"
                    VerticalAlignment="Center"
                    SpellCheck.IsEnabled="False"
                    Background="{DynamicResource Brush.Field}"
@@ -33,7 +33,7 @@
       </Border>
     </DataTemplate>
     <DataTemplate x:Key="MissingCell">
-      <Border Width="76"
+      <Border Width="88"
               Height="36"
               Margin="1"
               Background="{DynamicResource Brush.NavHover}"
@@ -54,7 +54,7 @@
 
   <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <StackPanel>
-        <StackPanel Orientation="Horizontal" Margin="128,0,0,4">
+        <StackPanel Orientation="Horizontal" Margin="132,0,0,4">
           <ItemsControl ItemsSource="{Binding ColumnHeaders}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -63,11 +63,11 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <TextBlock Width="78"
+                <TextBlock Width="90"
                            Text="{Binding}"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           FontSize="11"
+                           FontSize="13"
                            Foreground="{DynamicResource Brush.Muted}" />
               </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -77,10 +77,11 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <StackPanel Orientation="Horizontal" Margin="0,0,0,1">
-                <TextBlock Width="128"
+                <TextBlock Width="132"
                            Text="{Binding Label}"
                            VerticalAlignment="Center"
-                           FontSize="12" />
+                           FontSize="14"
+                           Foreground="{DynamicResource Brush.Ink}" />
                 <ItemsControl ItemsSource="{Binding Cells}"
                               ItemTemplateSelector="{StaticResource CellSelector}">
                   <ItemsControl.ItemsPanel>

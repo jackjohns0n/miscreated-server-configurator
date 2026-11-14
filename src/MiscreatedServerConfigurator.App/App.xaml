@@ -28,7 +28,7 @@
 
     <Style TargetType="Window">
       <Setter Property="FontFamily" Value="Segoe UI" />
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="15" />
       <Setter Property="Foreground" Value="{DynamicResource Brush.Ink}" />
       <Setter Property="Background" Value="{DynamicResource Brush.Window}" />
     </Style>
@@ -43,26 +43,31 @@
     </Style>
 
     <Style x:Key="SectionTitle" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="22" />
+      <Setter Property="Foreground" Value="{DynamicResource Brush.Ink}" />
+      <Setter Property="FontSize" Value="24" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Margin" Value="0,0,0,4" />
     </Style>
 
     <Style x:Key="BlockTitle" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="16" />
+      <Setter Property="Foreground" Value="{DynamicResource Brush.Ink}" />
+      <Setter Property="FontSize" Value="18" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Margin" Value="0,8,0,4" />
     </Style>
 
     <Style x:Key="KeyName" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Brush.Ink}" />
       <Setter Property="FontFamily" Value="Consolas" />
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontSize" Value="16" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
     <Style x:Key="ToolbarButton" TargetType="Button">
+      <Setter Property="Foreground" Value="{DynamicResource Brush.Ink}" />
       <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
+      <Setter Property="MinHeight" Value="32" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Padding" Value="12,6" />
       <Setter Property="Margin" Value="0,0,8,0" />
@@ -97,6 +102,7 @@
       <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
       <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="MinHeight" Value="32" />
       <Setter Property="Padding" Value="12,6" />
       <Setter Property="Margin" Value="0,0,8,0" />
       <Setter Property="Cursor" Value="Hand" />
@@ -127,7 +133,7 @@
 
     <Style x:Key="InputBox" TargetType="TextBox">
       <Setter Property="FontFamily" Value="Consolas" />
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="15" />
       <Setter Property="Padding" Value="8,6" />
       <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
       <Setter Property="BorderThickness" Value="1" />
@@ -259,7 +265,10 @@
       <Setter Property="Foreground" Value="{DynamicResource Brush.Ink}" />
       <Setter Property="Background" Value="{DynamicResource Brush.Field}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
-      <Setter Property="Padding" Value="8,5" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
       <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
       <Setter Property="Template">
         <Setter.Value>
@@ -270,7 +279,8 @@
                             IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                 <ToggleButton.Template>
                   <ControlTemplate TargetType="ToggleButton">
-                    <Border Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                    <Border MinHeight="32"
+                            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                             BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                             BorderThickness="1"
                             CornerRadius="4">
@@ -288,10 +298,11 @@
                 </ToggleButton.Template>
               </ToggleButton>
               <!-- SelectionBoxItem.ToString is the option type name. Label is the text the user should see. -->
-              <TextBlock Margin="10,0,28,0"
+              <TextBlock Margin="12,0,32,0"
                          HorizontalAlignment="Left"
                          VerticalAlignment="Center"
                          IsHitTestVisible="False"
+                         FontSize="{TemplateBinding FontSize}"
                          Foreground="{DynamicResource Brush.Ink}"
                          Text="{Binding SelectedItem.Label, RelativeSource={RelativeSource TemplatedParent}}"
                          TextTrimming="CharacterEllipsis" />

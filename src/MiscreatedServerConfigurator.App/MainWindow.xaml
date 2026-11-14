@@ -51,7 +51,7 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
           <TextBlock Text="Theme" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <ComboBox Width="140"
+          <ComboBox Width="180"
                     Margin="0,0,16,0"
                     VerticalAlignment="Center"
                     ItemsSource="{Binding ThemeOptions}"
@@ -60,20 +60,19 @@
                     ToolTip="Dark, light, or the Windows app theme. Follow system updates when Windows changes.">
             <ComboBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding Label}" />
+                <TextBlock Foreground="{DynamicResource Brush.Ink}" Text="{Binding Label}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
           <TextBlock Text="Find" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource Brush.Muted}" />
           <TextBox Width="220"
                    Style="{StaticResource InputBox}"
-                   MinHeight="0"
                    ToolTip="Filter the current section by CVAR name, description, or note."
                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,16,0">
           <TextBlock Text="Unused CVARs" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <ComboBox Width="180"
+          <ComboBox Width="220"
                     VerticalAlignment="Center"
                     ItemsSource="{Binding UnusedOptions}"
                     SelectedValuePath="Value"
@@ -81,7 +80,7 @@
                     ToolTip="An unused CVAR is not a live setting. The server uses its stock value.">
             <ComboBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding Label}" />
+                <TextBlock Foreground="{DynamicResource Brush.Ink}" Text="{Binding Label}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>

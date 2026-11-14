@@ -20,7 +20,7 @@
               </Style.Triggers>
             </Style>
           </Border.Style>
-          <TextBlock Text="Required" Foreground="{DynamicResource Brush.DangerInk}" FontSize="11" />
+          <TextBlock Text="Required" Foreground="{DynamicResource Brush.DangerInk}" FontSize="13" />
         </Border>
       </DockPanel>
 
@@ -90,9 +90,12 @@
         <PasswordBox x:Name="SecretBox"
                      Grid.Column="0"
                      FontFamily="Consolas"
-                     FontSize="13"
+                     FontSize="15"
                      Padding="8,6"
                      MinHeight="32"
+                     Background="{DynamicResource Brush.Field}"
+                     Foreground="{DynamicResource Brush.Ink}"
+                     CaretBrush="{DynamicResource Brush.Ink}"
                      BorderBrush="{DynamicResource Brush.Line}"
                      PasswordChanged="SecretBox_OnPasswordChanged">
           <PasswordBox.Style>
@@ -153,7 +156,10 @@
                         Margin="8,0,0,0"
                         Command="{Binding DataContext.RemoveWorkshopCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                         CommandParameter="{Binding}" />
-                <TextBlock FontFamily="Consolas" VerticalAlignment="Center" Text="{Binding}" />
+                <TextBlock FontFamily="Consolas"
+                           Foreground="{DynamicResource Brush.Ink}"
+                           VerticalAlignment="Center"
+                           Text="{Binding}" />
               </DockPanel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
