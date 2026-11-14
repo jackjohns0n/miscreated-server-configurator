@@ -13,9 +13,9 @@
     <SolidColorBrush x:Key="Brush.Ink" Color="#1F2933" />
     <SolidColorBrush x:Key="Brush.Muted" Color="#445266" />
     <SolidColorBrush x:Key="Brush.Line" Color="#D0D4D8" />
-    <SolidColorBrush x:Key="Brush.Accent" Color="#1F4E79" />
+    <SolidColorBrush x:Key="Brush.Accent" Color="#2F6FA3" />
     <SolidColorBrush x:Key="Brush.AccentSoft" Color="#E2E8EF" />
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="#163E64" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="#3D82BC" />
     <SolidColorBrush x:Key="Brush.NavHover" Color="#E3E6EA" />
     <SolidColorBrush x:Key="Brush.OnAccent" Color="#FFFFFF" />
     <SolidColorBrush x:Key="Brush.WarnBg" Color="#F3EDE3" />
@@ -110,22 +110,65 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="Bd"
-                    Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="4"
-                    Padding="{TemplateBinding Padding}">
-              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
+            <Grid>
+              <Border x:Name="Bd"
+                      Background="{TemplateBinding Background}"
+                      BorderBrush="{TemplateBinding BorderBrush}"
+                      BorderThickness="{TemplateBinding BorderThickness}"
+                      CornerRadius="4" />
+              <!-- The app-wide TextBlock style would paint this label with body text. Force the button color. -->
+              <ContentPresenter Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                <ContentPresenter.Resources>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                  </Style>
+                </ContentPresenter.Resources>
+              </ContentPresenter>
+            </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
               </Trigger>
               <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" Value="0.45" />
+                <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+                <Setter TargetName="Bd" Property="Opacity" Value="0.75" />
               </Trigger>
             </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="WarningChip" TargetType="Button">
+      <Setter Property="Foreground" Value="{DynamicResource Brush.WarnInk}" />
+      <Setter Property="Background" Value="{DynamicResource Brush.WarnBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.WarnLine}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="8,2" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="8"
+                    Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ContentPresenter.Resources>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                  </Style>
+                </ContentPresenter.Resources>
+              </ContentPresenter>
+            </Border>
           </ControlTemplate>
         </Setter.Value>
       </Setter>

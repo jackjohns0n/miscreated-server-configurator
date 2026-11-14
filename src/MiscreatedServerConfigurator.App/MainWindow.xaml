@@ -94,7 +94,20 @@
     </Border>
 
     <Border DockPanel.Dock="Bottom" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="0,1,0,0" Padding="16,8">
-      <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource Brush.Muted}" TextTrimming="CharacterEllipsis" />
+      <DockPanel>
+        <Button DockPanel.Dock="Right"
+                Margin="12,0,0,0"
+                VerticalAlignment="Center"
+                Command="{Binding ShowWarningCommand}"
+                Content="{Binding WarningSummary}"
+                Style="{StaticResource WarningChip}"
+                ToolTip="Go to the section with a warning"
+                Visibility="{Binding WarningSummary, Converter={StaticResource StringToVis}}" />
+        <TextBlock VerticalAlignment="Center"
+                   Foreground="{DynamicResource Brush.Muted}"
+                   Text="{Binding StatusText}"
+                   TextTrimming="CharacterEllipsis" />
+      </DockPanel>
     </Border>
 
     <Grid>
@@ -119,11 +132,31 @@
               <DataTemplate>
                 <DockPanel>
                   <TextBlock DockPanel.Dock="Right"
-                             MinWidth="24"
+                             MinWidth="18"
+                             Margin="8,0,0,0"
                              TextAlignment="Right"
                              Foreground="{DynamicResource Brush.Muted}"
                              Text="{Binding EnabledCount}"
                              ToolTip="Live settings in this section" />
+                  <Border DockPanel.Dock="Right"
+                          MinWidth="16"
+                          Height="16"
+                          Margin="8,0,0,0"
+                          Padding="4,0"
+                          VerticalAlignment="Center"
+                          Background="{DynamicResource Brush.WarnBg}"
+                          BorderBrush="{DynamicResource Brush.WarnLine}"
+                          BorderThickness="1"
+                          CornerRadius="8"
+                          ToolTip="Warnings in this section"
+                          Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Brush.WarnInk}"
+                               Text="{Binding WarningCount}" />
+                  </Border>
                   <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
                 </DockPanel>
               </DataTemplate>
@@ -149,13 +182,13 @@
               <Style TargetType="Border">
                 <Setter Property="Visibility" Value="Visible" />
                 <Style.Triggers>
-                  <DataTrigger Binding="{Binding Warnings.Count}" Value="0">
+                  <DataTrigger Binding="{Binding VisibleWarnings.Count}" Value="0">
                     <Setter Property="Visibility" Value="Collapsed" />
                   </DataTrigger>
                 </Style.Triggers>
               </Style>
             </Border.Style>
-            <ItemsControl ItemsSource="{Binding Warnings}">
+            <ItemsControl ItemsSource="{Binding VisibleWarnings}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{DynamicResource Brush.WarnInk}" Margin="0,2" />

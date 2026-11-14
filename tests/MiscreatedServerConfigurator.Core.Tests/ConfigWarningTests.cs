@@ -1,3 +1,4 @@
+using MiscreatedServerConfigurator.Core.Catalog;
 using MiscreatedServerConfigurator.Core.Hosting;
 
 namespace MiscreatedServerConfigurator.Core.Tests;
@@ -13,6 +14,24 @@ public sealed class ConfigWarningTests
         Assert.Contains("http_password.placeholder", ids);
         Assert.Contains("sv_servername.missing", ids);
         Assert.DoesNotContain("passwords.match", ids);
+        Assert.All(warnings, warning => Assert.Equal(CvarSection.Core, warning.Section));
+    }
+
+    [Fact]
+    public void Every_warning_is_mapped_to_the_section_that_owns_its_cvar()
+    {
+        var session = HostingConfigSession.Load(ServerTemplate.LoadText());
+        var warnings = ConfigWarnings.Evaluate(session);
+
+        Assert.Equal(CvarSection.Core, session.Catalog.Find("http_password")!.Section);
+        Assert.Equal(CvarSection.Core, session.Catalog.Find("sv_servername")!.Section);
+        Assert.Equal(CvarSection.Core, session.Catalog.Find("sv_password")!.Section);
+        Assert.Equal(
+            session.Catalog.Find("http_password")!.Section,
+            warnings.Single(warning => warning.Id == "http_password.placeholder").Section);
+        Assert.Equal(
+            session.Catalog.Find("sv_servername")!.Section,
+            warnings.Single(warning => warning.Id == "sv_servername.missing").Section);
     }
 
     [Fact]
@@ -29,6 +48,7 @@ public sealed class ConfigWarningTests
 
         Assert.DoesNotContain(secret, match.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(warnings, warning => warning.Id == "http_password.placeholder");
+        Assert.Equal(CvarSection.Core, match.Section);
     }
 
     [Fact]

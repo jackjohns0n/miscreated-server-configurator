@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Validation text is shown only on the section that owns the CVAR. Other sections keep a warning count on the section list, and the status bar shows a short "1 warning" link instead of the full message.
+- The Save button uses the same blue in Light and Dark, with white text, including hover and pressed.
 - `sv_servername` is edited as the plain server name. The editor writes the quotes (`sv_servername="My Server"`). The template's `""` is not offered as a reference value, and neither is any other empty or quote-only template value.
 - Light theme no longer uses pure white surfaces. The page is `#E9ECEF`, cards are `#F4F5F7`, and inputs are `#F1F3F5`, with softer borders. Text contrast stays at WCAG AA or better.
 - An unexpected error is written to `%LOCALAPPDATA%\MiscreatedServerConfigurator\error.log` and shown in a dialog. The log is the exception text only, not the open hosting.cfg.

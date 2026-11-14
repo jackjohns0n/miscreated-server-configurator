@@ -244,6 +244,7 @@ public sealed class DamageMatrixViewModel
 public sealed class SectionViewModel : ObservableObject
 {
     private int _enabledCount;
+    private int _warningCount;
     private bool _showMatrix;
     private bool _showEmptySearch;
 
@@ -300,6 +301,29 @@ public sealed class SectionViewModel : ObservableObject
     {
         get => _enabledCount;
         private set => SetProperty(ref _enabledCount, value);
+    }
+
+    /// <summary>How many validation warnings belong to this section.</summary>
+    public int WarningCount
+    {
+        get => _warningCount;
+        private set
+        {
+            if (SetProperty(ref _warningCount, value))
+            {
+                Raise(nameof(HasWarnings));
+            }
+        }
+    }
+
+    /// <summary>True when the nav entry should show a warning badge.</summary>
+    public bool HasWarnings => _warningCount > 0;
+
+    /// <summary>Updates the nav badge from the warnings for this section.</summary>
+    /// <param name="count">Warning count. Zero hides the badge.</param>
+    public void SetWarningCount(int count)
+    {
+        WarningCount = count;
     }
 
     /// <summary>True when the matrix is on screen instead of the row list.</summary>

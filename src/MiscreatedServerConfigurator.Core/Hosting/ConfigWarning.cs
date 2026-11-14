@@ -1,3 +1,5 @@
+using MiscreatedServerConfigurator.Core.Catalog;
+
 namespace MiscreatedServerConfigurator.Core.Hosting;
 
 /// <summary>
@@ -10,10 +12,12 @@ public sealed class ConfigWarning
     /// </summary>
     /// <param name="id">Stable id for tests. Not shown as the main message.</param>
     /// <param name="message">Text for the user. Must not contain a password or API key.</param>
-    public ConfigWarning(string id, string message)
+    /// <param name="section">The editor section that owns the CVAR. The message is shown only on that page.</param>
+    public ConfigWarning(string id, string message, CvarSection section)
     {
         Id = id;
         Message = message;
+        Section = section;
     }
 
     /// <summary>Stable id for tests.</summary>
@@ -21,6 +25,9 @@ public sealed class ConfigWarning
 
     /// <summary>Text for the user. Does not include secret values.</summary>
     public string Message { get; }
+
+    /// <summary>Editor section that should display <see cref="Message"/>.</summary>
+    public CvarSection Section { get; }
 }
 
 /// <summary>
@@ -42,34 +49,47 @@ public static class ConfigWarnings
         var serverName = session.GetRequired("sv_servername");
         var joinPassword = session.GetRequired("sv_password");
 
+        var httpSection = SectionOf(session, "http_password");
+        var nameSection = SectionOf(session, "sv_servername");
         if (!http.Enabled || Unquote(http.Value).Length == 0)
         {
             warnings.Add(new ConfigWarning(
                 "http_password.missing",
-                "http_password is not set. The reference template says an RCON password is required for a uniquely named server."));
+                "http_password is not set. The reference template says an RCON password is required for a uniquely named server.",
+                httpSection));
         }
         else if (string.Equals(Unquote(http.Value), "CHANGE_ME", StringComparison.Ordinal))
         {
             warnings.Add(new ConfigWarning(
                 "http_password.placeholder",
-                "http_password is still the placeholder CHANGE_ME. Replace it with a strong password before you start the server."));
+                "http_password is still the placeholder CHANGE_ME. Replace it with a strong password before you start the server.",
+                httpSection));
         }
 
         if (!serverName.Enabled || Unquote(serverName.Value).Length == 0)
         {
             warnings.Add(new ConfigWarning(
                 "sv_servername.missing",
-                "sv_servername is empty. The reference template says a server name is required."));
+                "sv_servername is empty. The reference template says a server name is required.",
+                nameSection));
         }
 
+        // Both keys live in the same section. One notice is enough, shown with http_password.
         if (http.Enabled && joinPassword.Enabled && SameSecret(http.Value, joinPassword.Value))
         {
             warnings.Add(new ConfigWarning(
                 "passwords.match",
-                "http_password and sv_password are the same. The reference template says not to set them equal."));
+                "http_password and sv_password are the same. The reference template says not to set them equal.",
+                httpSection));
         }
 
         return warnings;
+    }
+
+    private static CvarSection SectionOf(HostingConfigSession session, string key)
+    {
+        return session.Catalog.Find(key)?.Section
+            ?? throw new InvalidOperationException($"Warning key '{key}' is not in the catalog.");
     }
 
     private static bool SameSecret(string left, string right)

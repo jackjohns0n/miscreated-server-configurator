@@ -42,6 +42,8 @@ public sealed class MainViewModel : ObservableObject
         };
         Sections = new ObservableCollection<SectionViewModel>();
         Warnings = new ObservableCollection<ConfigWarning>();
+        VisibleWarnings = new ObservableCollection<ConfigWarning>();
+        ShowWarningCommand = new RelayCommand(ShowFirstWarning, () => WarningCount > 0);
         _session = HostingConfigSession.Load(string.Empty);
         _loadedText = string.Empty;
         Load(ServerTemplate.LoadText(), path: null);
@@ -50,8 +52,25 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Sections shown in the navigation list.</summary>
     public ObservableCollection<SectionViewModel> Sections { get; }
 
-    /// <summary>Non-blocking checks against the template's own rules.</summary>
+    /// <summary>Every current validation warning, used for nav badges and the status count.</summary>
     public ObservableCollection<ConfigWarning> Warnings { get; }
+
+    /// <summary>Warnings for the section on screen. Other sections do not show this text.</summary>
+    public ObservableCollection<ConfigWarning> VisibleWarnings { get; }
+
+    /// <summary>Selects the first section that has a warning.</summary>
+    public RelayCommand ShowWarningCommand { get; }
+
+    /// <summary>How many validation warnings exist. Zero hides the status link.</summary>
+    public int WarningCount => Warnings.Count;
+
+    /// <summary>Short status label such as "1 warning", or empty when there is nothing to show.</summary>
+    public string WarningSummary => WarningCount switch
+    {
+        0 => string.Empty,
+        1 => "1 warning",
+        _ => WarningCount.ToString(System.Globalization.CultureInfo.InvariantCulture) + " warnings",
+    };
 
     /// <summary>The two ways to write an unused CVAR.</summary>
     public IReadOnlyList<UnusedOutputOption> UnusedOptions { get; }
@@ -78,7 +97,13 @@ public sealed class MainViewModel : ObservableObject
     public SectionViewModel? SelectedSection
     {
         get => _selectedSection;
-        set => SetProperty(ref _selectedSection, value);
+        set
+        {
+            if (SetProperty(ref _selectedSection, value))
+            {
+                RefreshVisibleWarnings();
+            }
+        }
     }
 
     /// <summary>
@@ -343,6 +368,32 @@ public sealed class MainViewModel : ObservableObject
         return row;
     }
 
+    private void RefreshVisibleWarnings()
+    {
+        VisibleWarnings.Clear();
+        if (SelectedSection?.Section is not CvarSection section)
+        {
+            return;
+        }
+
+        foreach (var warning in Warnings)
+        {
+            if (warning.Section == section)
+            {
+                VisibleWarnings.Add(warning);
+            }
+        }
+    }
+
+    private void ShowFirstWarning()
+    {
+        var section = Sections.FirstOrDefault(item => item.HasWarnings);
+        if (section is not null)
+        {
+            SelectedSection = section;
+        }
+    }
+
     private void OnRowEdited(object? sender, EventArgs e)
     {
         Refresh();
@@ -360,11 +411,24 @@ public sealed class MainViewModel : ObservableObject
 
         var written = _session.ToText(UnusedOutput);
         IsDirty = !string.Equals(written, _loadedText, StringComparison.Ordinal);
+        var evaluated = ConfigWarnings.Evaluate(_session);
         Warnings.Clear();
-        foreach (var warning in ConfigWarnings.Evaluate(_session))
+        foreach (var warning in evaluated)
         {
             Warnings.Add(warning);
         }
+
+        foreach (var section in Sections)
+        {
+            var count = section.Section is CvarSection owned
+                ? evaluated.Count(warning => warning.Section == owned)
+                : 0;
+            section.SetWarningCount(count);
+        }
+
+        RefreshVisibleWarnings();
+        Raise(nameof(WarningCount));
+        Raise(nameof(WarningSummary));
 
         var where = string.IsNullOrEmpty(FilePath) ? "New hosting.cfg" : FilePath;
         var mode = UnusedOutput == UnusedCvarOutput.Omit ? "unused CVARs omitted" : "unused CVARs commented out";
