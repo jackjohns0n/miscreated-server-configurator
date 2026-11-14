@@ -127,8 +127,8 @@ public sealed class DamageCellViewModel
     }
 
     /// <summary>
-    /// Creates a cell for a pair the reference template does not contain.
-    /// The editor does not invent that CVAR.
+    /// Creates a non-editable cell. <c>g_gameRules_faction2_dmg_f2</c> is the pair the catalog omits on purpose:
+    /// faction 2 is bases and vehicles, a base cannot damage a base, and vehicle damage is handled elsewhere.
     /// </summary>
     /// <param name="key">The name the documented pattern would have used.</param>
     /// <returns>A non-editable cell.</returns>
@@ -151,7 +151,7 @@ public sealed class DamageCellViewModel
 
     /// <summary>Tooltip text.</summary>
     public string ToolTip => IsMissing
-        ? Key + " is not a line in the reference template, so it is not offered as a CVAR."
+        ? Key + " is intentionally absent. Faction 2 is bases and vehicles: a base cannot damage a base, and vehicle damage is handled elsewhere. Unspecified values use the server's stock value."
         : Key;
 }
 

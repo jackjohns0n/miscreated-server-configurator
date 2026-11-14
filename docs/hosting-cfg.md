@@ -100,7 +100,7 @@ Official help describes built-in factions differently (0 unaffiliated players, 1
 
 Each row is the faction dealing damage. Each column is the faction taking it. A cell is one CVAR, `g_gameRules_factionX_dmg_fY`. Uncheck a cell to leave it unused. The template comments `1` on every cell it contains. Those lines have no per-cell description beyond the header.
 
-The template has no line for faction 2 damaging faction 2 (`g_gameRules_faction2_dmg_f2`). That cell is shown as a dash and is not a CVAR in the catalog. The editor does not invent it. If a file already contains that key, the cell becomes editable and the line is preserved.
+`g_gameRules_faction2_dmg_f2` is intentionally absent. Faction 2 is bases and vehicles: a base cannot damage a base, and vehicle damage is handled elsewhere. That cell stays out of the catalog and is shown as a dash. Leaving a cell unchecked, like any other unused CVAR, does not write a value, so the server uses its stock value. If a file already contains that key, the cell becomes editable and the line is preserved.
 
 ## steam_ugc
 

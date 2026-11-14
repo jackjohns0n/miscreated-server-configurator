@@ -66,7 +66,7 @@ internal static class ReferenceNotes
         [CvarSection.FactionDamage] =
             "Labels follow the template header: f0 players, f1 AI, f2 bases and vehicles, f3 through f15 admin factions. "
             + "Official help instead describes built-in factions as 0 unaffiliated players, 1 environment, and 2 bases. "
-            + "The template has no line for faction 2 damaging faction 2, so that cell is not a catalog CVAR. "
+            + "g_gameRules_faction2_dmg_f2 is intentionally absent: faction 2 is bases and vehicles, a base cannot damage a base, and vehicle damage is handled elsewhere. Unspecified values use the server's stock value. "
             + "The template header says 1.0 is normal damage, 2.0 is double damage, and 0 is no damage.",
     };
 

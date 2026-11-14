@@ -177,7 +177,8 @@ public sealed class CvarCatalogTests
 
         Assert.Contains("7 through 15", factions, StringComparison.Ordinal);
         Assert.Contains("f1 AI", damage, StringComparison.Ordinal);
-        Assert.Contains("faction 2 damaging faction 2", damage, StringComparison.Ordinal);
+        Assert.Contains("intentionally absent", damage, StringComparison.Ordinal);
+        Assert.Contains("stock value", damage, StringComparison.Ordinal);
         Assert.Equal("0 Players", FactionDamageKey.Label(0));
         Assert.Equal("1 AI", FactionDamageKey.Label(1));
         Assert.Equal("2 Bases", FactionDamageKey.Label(2));

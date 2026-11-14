@@ -270,6 +270,10 @@ public sealed class MainViewModel : ObservableObject
         var damage = Sections.First(section => section.Section == CvarSection.FactionDamage);
         var headers = new List<string>(16);
         var matrixRows = new List<DamageRowViewModel>(16);
+
+        // g_gameRules_faction2_dmg_f2 is intentionally absent, so the catalog has no row for it.
+        // Faction 2 is bases/vehicles: a base cannot damage a base, and vehicle damage is handled elsewhere.
+        // That cell is left out of the file. Any unspecified matrix value uses the server's stock value.
         for (var source = 0; source < 16; source++)
         {
             headers.Add(FactionDamageKey.Label(source));
