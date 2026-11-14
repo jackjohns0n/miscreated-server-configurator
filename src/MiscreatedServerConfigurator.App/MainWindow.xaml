@@ -1,0 +1,268 @@
+<Window x:Class="MiscreatedServerConfigurator.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:MiscreatedServerConfigurator.App.Views"
+        Title="{Binding WindowTitle}"
+        Width="1240"
+        Height="820"
+        MinWidth="960"
+        MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        Closing="OnClosing">
+  <Window.CommandBindings>
+    <CommandBinding Command="New" CanExecute="New_CanExecute" Executed="New_Executed" />
+    <CommandBinding Command="Open" CanExecute="Open_CanExecute" Executed="Open_Executed" />
+    <CommandBinding Command="Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
+    <CommandBinding Command="SaveAs" CanExecute="SaveAs_CanExecute" Executed="SaveAs_Executed" />
+  </Window.CommandBindings>
+  <Window.InputBindings>
+    <KeyBinding Key="N" Modifiers="Control" Command="New" />
+    <KeyBinding Key="O" Modifiers="Control" Command="Open" />
+    <KeyBinding Key="S" Modifiers="Control" Command="Save" />
+    <KeyBinding Key="S" Modifiers="Control+Shift" Command="SaveAs" />
+  </Window.InputBindings>
+
+  <DockPanel Background="{DynamicResource Brush.Window}">
+    <Menu DockPanel.Dock="Top" Padding="6,2">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New from template" Command="New" InputGestureText="Ctrl+N" />
+        <MenuItem Header="_Open..." Command="Open" InputGestureText="Ctrl+O" />
+        <Separator />
+        <MenuItem Header="_Save" Command="Save" InputGestureText="Ctrl+S" />
+        <MenuItem Header="Save _As..." Command="SaveAs" InputGestureText="Ctrl+Shift+S" />
+        <Separator />
+        <MenuItem Header="E_xit" Click="Exit_Click" />
+      </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="_About" Click="About_Click" />
+      </MenuItem>
+    </Menu>
+
+    <Border DockPanel.Dock="Top" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="0,0,0,1" Padding="16,10">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Content="New" Command="New" Style="{StaticResource ToolbarButton}" />
+          <Button Content="Open" Command="Open" Style="{StaticResource ToolbarButton}" />
+          <Button Content="Save" Command="Save" Style="{StaticResource PrimaryButton}" />
+          <Button Content="Save as" Command="SaveAs" Style="{StaticResource ToolbarButton}" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="Theme" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ComboBox Width="180"
+                    Margin="0,0,16,0"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding ThemeOptions}"
+                    SelectedValuePath="Value"
+                    SelectedValue="{Binding Theme}"
+                    ToolTip="Dark, light, or the Windows app theme. Follow system updates when Windows changes.">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Foreground="{DynamicResource Brush.Ink}" Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Text="Find" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource Brush.Muted}" />
+          <TextBox Width="220"
+                   Style="{StaticResource InputBox}"
+                   ToolTip="Filter the current section by CVAR name, description, or note."
+                   Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,16,0">
+          <TextBlock Text="Unused CVARs" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ComboBox Width="220"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding UnusedOptions}"
+                    SelectedValuePath="Value"
+                    SelectedValue="{Binding UnusedOutput}"
+                    ToolTip="An unused CVAR is not a live setting. The server uses its stock value.">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Foreground="{DynamicResource Brush.Ink}" Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Border DockPanel.Dock="Top" Background="{DynamicResource Brush.Window}" Padding="16,6,16,0">
+      <TextBlock Style="{StaticResource MutedText}"
+                 Text="Unused CVARs are not written as live settings, so the server keeps its factory default. Comment them out to leave them in the file, or omit them." />
+    </Border>
+
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="0,1,0,0" Padding="16,8">
+      <DockPanel>
+        <Button DockPanel.Dock="Right"
+                Margin="12,0,0,0"
+                VerticalAlignment="Center"
+                Command="{Binding ShowWarningCommand}"
+                Content="{Binding WarningSummary}"
+                Style="{StaticResource WarningChip}"
+                ToolTip="Go to the section with a warning"
+                Visibility="{Binding WarningSummary, Converter={StaticResource StringToVis}}" />
+        <TextBlock VerticalAlignment="Center"
+                   Foreground="{DynamicResource Brush.Muted}"
+                   Text="{Binding StatusText}"
+                   TextTrimming="CharacterEllipsis" />
+      </DockPanel>
+    </Border>
+
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="248" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="0,0,1,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     Margin="14,14,14,8"
+                     FontWeight="SemiBold"
+                     Text="Sections" />
+          <ListBox ItemsSource="{Binding Sections}"
+                   SelectedItem="{Binding SelectedSection}"
+                   BorderThickness="0"
+                   Background="Transparent"
+                   ItemContainerStyle="{StaticResource NavItem}"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <DockPanel>
+                  <TextBlock DockPanel.Dock="Right"
+                             MinWidth="18"
+                             Margin="8,0,0,0"
+                             TextAlignment="Right"
+                             Foreground="{DynamicResource Brush.Muted}"
+                             Text="{Binding EnabledCount}"
+                             ToolTip="Live settings in this section" />
+                  <Border DockPanel.Dock="Right"
+                          MinWidth="16"
+                          Height="16"
+                          Margin="8,0,0,0"
+                          Padding="4,0"
+                          VerticalAlignment="Center"
+                          Background="{DynamicResource Brush.WarnBg}"
+                          BorderBrush="{DynamicResource Brush.WarnLine}"
+                          BorderThickness="1"
+                          CornerRadius="8"
+                          ToolTip="Warnings in this section"
+                          Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Brush.WarnInk}"
+                               Text="{Binding WarningCount}" />
+                  </Border>
+                  <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                </DockPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+
+      <ScrollViewer Grid.Column="1"
+                    Background="{DynamicResource Brush.Window}"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,24,28" MaxWidth="1100" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding SelectedSection.Title}" />
+
+          <Border Margin="0,8,0,12"
+                  Padding="12,10"
+                  Background="{DynamicResource Brush.WarnBg}"
+                  BorderBrush="{DynamicResource Brush.WarnLine}"
+                  BorderThickness="1"
+                  CornerRadius="6">
+            <Border.Style>
+              <Style TargetType="Border">
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding VisibleWarnings.Count}" Value="0">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Border.Style>
+            <ItemsControl ItemsSource="{Binding VisibleWarnings}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{DynamicResource Brush.WarnInk}" Margin="0,2" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+
+          <Border Margin="0,0,0,12"
+                  Padding="12,10"
+                  Background="{DynamicResource Brush.InfoBg}"
+                  BorderBrush="{DynamicResource Brush.Line}"
+                  BorderThickness="1"
+                  CornerRadius="6"
+                  Visibility="{Binding SelectedSection.Note, Converter={StaticResource StringToVis}}">
+            <TextBlock Text="{Binding SelectedSection.Note}" TextWrapping="Wrap" Foreground="{DynamicResource Brush.InfoInk}" />
+          </Border>
+
+          <Expander Header="About this file format"
+                    Margin="0,0,0,12"
+                    Visibility="{Binding SelectedSection.PreambleText, Converter={StaticResource StringToVis}}">
+            <TextBlock Margin="0,8,0,0"
+                       Style="{StaticResource MutedText}"
+                       Text="{Binding SelectedSection.PreambleText}" />
+          </Expander>
+
+          <ItemsControl ItemsSource="{Binding SelectedSection.Blocks}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}">
+                  <TextBlock Style="{StaticResource BlockTitle}" Text="{Binding Title}" />
+                  <TextBlock Style="{StaticResource MutedText}"
+                             Margin="0,0,0,6"
+                             Text="{Binding HeaderText}"
+                             Visibility="{Binding HeaderText, Converter={StaticResource StringToVis}}" />
+                  <TextBlock Style="{StaticResource MutedText}"
+                             Margin="0,0,0,8"
+                             Text="{Binding NotesText}"
+                             Visibility="{Binding NotesText, Converter={StaticResource StringToVis}}" />
+                  <ItemsControl ItemsSource="{Binding Rows}"
+                                Visibility="{Binding ShowRows, Converter={StaticResource BoolToVis}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <views:CvarEditorRow Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Bound on this element, not on the matrix view. The view's DataContext is the matrix, so a visibility binding there never sees the selected section and the caption stayed on every page. -->
+          <TextBlock Margin="0,4,0,8"
+                     Style="{StaticResource MutedText}"
+                     Text="Each row is the faction dealing damage. Each column is the faction taking it. An unchecked cell is not written, so the server keeps its stock value."
+                     TextWrapping="Wrap"
+                     Visibility="{Binding SelectedSection.IsDamageSection, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed, TargetNullValue=Collapsed}" />
+          <ContentControl Margin="0,0,0,0"
+                          Content="{Binding SelectedSection.Matrix}"
+                          Visibility="{Binding SelectedSection.ShowMatrix, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed, TargetNullValue=Collapsed}">
+            <ContentControl.ContentTemplate>
+              <DataTemplate>
+                <views:FactionDamageMatrixView />
+              </DataTemplate>
+            </ContentControl.ContentTemplate>
+          </ContentControl>
+
+          <TextBlock Margin="0,16,0,0"
+                     Style="{StaticResource MutedText}"
+                     Text="No CVARs match."
+                     Visibility="{Binding SelectedSection.ShowEmptySearch, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
+</Window>
