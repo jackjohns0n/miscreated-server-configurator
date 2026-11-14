@@ -25,6 +25,13 @@ public sealed class ThemeOption
 
     /// <summary>Text shown in the combo box.</summary>
     public string Label { get; }
+
+    /// <summary>Returns <see cref="Label"/> so a selection box that calls <see cref="object.ToString"/> does not show the type name.</summary>
+    /// <returns>The friendly label.</returns>
+    public override string ToString()
+    {
+        return Label;
+    }
 }
 
 /// <summary>
@@ -46,6 +53,13 @@ public sealed class UnusedOutputOption
 
     /// <summary>Text shown in the combo box.</summary>
     public string Label { get; }
+
+    /// <summary>Returns <see cref="Label"/> so a selection box that calls <see cref="object.ToString"/> does not show the type name.</summary>
+    /// <returns>The friendly label.</returns>
+    public override string ToString()
+    {
+        return Label;
+    }
 }
 
 /// <summary>

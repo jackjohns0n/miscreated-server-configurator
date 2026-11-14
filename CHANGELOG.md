@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Dark theme paints the page behind the editor cards. That area was the system window color, which stays white. Secondary text is darker in the light theme and lighter in the dark theme so helper lines meet WCAG AA on those backgrounds.
+- The Theme and Unused CVARs boxes show their labels (Follow system, Light, Dark; Comment them out, Omit them) instead of the option type name.
 - The damage-matrix explanation is shown only on the faction damage matrix page.
 - Factions 3–15 are labeled "Faction 3" through "Faction 15", with no built-in role.
 - The window no longer crashes on startup. The Save command was asked whether it could run while the window was still loading, before the editor model existed.

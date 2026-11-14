@@ -25,7 +25,7 @@
     <KeyBinding Key="S" Modifiers="Control+Shift" Command="SaveAs" />
   </Window.InputBindings>
 
-  <DockPanel>
+  <DockPanel Background="{DynamicResource Brush.Window}">
     <Menu DockPanel.Dock="Top" Padding="6,2">
       <MenuItem Header="_File">
         <MenuItem Header="_New from template" Command="New" InputGestureText="Ctrl+N" />
@@ -55,10 +55,15 @@
                     Margin="0,0,16,0"
                     VerticalAlignment="Center"
                     ItemsSource="{Binding ThemeOptions}"
-                    DisplayMemberPath="Label"
                     SelectedValuePath="Value"
                     SelectedValue="{Binding Theme}"
-                    ToolTip="Dark, light, or the Windows app theme. Follow system updates when Windows changes." />
+                    ToolTip="Dark, light, or the Windows app theme. Follow system updates when Windows changes.">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
           <TextBlock Text="Find" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource Brush.Muted}" />
           <TextBox Width="220"
                    Style="{StaticResource InputBox}"
@@ -71,10 +76,15 @@
           <ComboBox Width="180"
                     VerticalAlignment="Center"
                     ItemsSource="{Binding UnusedOptions}"
-                    DisplayMemberPath="Label"
                     SelectedValuePath="Value"
                     SelectedValue="{Binding UnusedOutput}"
-                    ToolTip="An unused CVAR is not a live setting. The server uses its stock value." />
+                    ToolTip="An unused CVAR is not a live setting. The server uses its stock value.">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
         </StackPanel>
       </DockPanel>
     </Border>
@@ -123,7 +133,10 @@
         </DockPanel>
       </Border>
 
-      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <ScrollViewer Grid.Column="1"
+                    Background="{DynamicResource Brush.Window}"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="24,20,24,28" MaxWidth="1100" HorizontalAlignment="Left">
           <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding SelectedSection.Title}" />
 
