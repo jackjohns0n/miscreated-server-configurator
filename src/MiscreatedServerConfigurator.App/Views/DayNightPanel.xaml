@@ -25,7 +25,7 @@
                      Text="The template's stock values are wm_timeScale=2 and wm_timeScaleNight=4. Read backwards, that is a 6.5-hour day and a 1.375-hour night, 7.875 hours for the whole cycle. The template comment says a setting of 2 makes a full day pass in 12 real hours. That 12 hours is the whole cycle when night runs at the same speed as day (wm_timeScaleNight=1): 6.5 hours of day plus 5.5 hours of night. The stock night value of 4 is faster, so the night is 1.375 hours and the cycle is 7.875 hours, not 12." />
           <TextBlock Style="{StaticResource MutedText}"
                      Margin="0,0,0,8"
-                     Text="The Current settings line under the boxes reads the two scale values back into real hours with that same math. The scales are stored to two decimal places, so the hours can sit a little off what you typed." />
+                     Text="The line under the hour boxes is the pending calculation. It changes on every edit, including when you clear a box. An empty or invalid box clears the scale it feeds and says what is missing, for example: Enter a night length to calculate wm_timeScaleNight. Apply stays off until both sides are valid. Apply is what writes the two scales. Until then the file is left as it was. Saved in this file, further down, is what the file holds now. The scales are stored to two decimal places, so the hours can sit a little off what you typed." />
           <TextBlock Style="{StaticResource MutedText}"
                      Margin="0,0,0,8"
                      Text="Clear Use this value and that CVAR is not written as a live setting. The server uses its stock default for it, and the Current settings line names the one that is turned off." />
@@ -56,18 +56,22 @@
         </StackPanel>
       </Grid>
 
-      <TextBlock Margin="0,0,0,8"
-                 Foreground="{DynamicResource Brush.WarnInk}"
-                 Text="{Binding ValidationMessage}"
-                 TextWrapping="Wrap"
-                 Visibility="{Binding ValidationMessage, Converter={StaticResource StringToVis}}" />
+      <TextBlock Margin="0,0,0,12" Text="{Binding PreviewMessage}" TextWrapping="Wrap">
+        <TextBlock.Style>
+          <Style BasedOn="{StaticResource MutedText}" TargetType="TextBlock">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding CanApply}" Value="False">
+                <Setter Property="Foreground" Value="{DynamicResource Brush.WarnInk}" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </TextBlock.Style>
+      </TextBlock>
 
-      <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,12" Text="{Binding CurrentSettings}" />
-
-      <TextBlock Margin="0,4,0,4" FontWeight="SemiBold" Text="Scale values" />
+      <TextBlock Margin="0,4,0,4" FontWeight="SemiBold" Text="Calculated scales" />
       <TextBlock Style="{StaticResource MutedText}"
                  Margin="0,0,0,8"
-                 Text="These are the values written to hosting.cfg. Change the hours above, or edit a scale here. Either side updates the other." />
+                 Text="These update as you type, and either side updates the other. They are not written until you Apply, and only when both are valid. Clearing a box leaves the file unchanged." />
 
       <StackPanel Margin="0,0,0,12">
         <CheckBox Margin="0,0,0,6"
@@ -81,8 +85,8 @@
                    Visibility="{Binding TimeScaleRow.Description, Converter={StaticResource StringToVis}}" />
         <TextBox MinHeight="32"
                  Style="{StaticResource InputBox}"
-                 Text="{Binding TimeScaleRow.Value, UpdateSourceTrigger=PropertyChanged}"
-                 ToolTip="Day speed. A larger number makes the day pass sooner." />
+                 Text="{Binding TimeScaleText, UpdateSourceTrigger=PropertyChanged}"
+                 ToolTip="Day speed. A larger number makes the day pass sooner. Empty until a day length is entered." />
       </StackPanel>
 
       <StackPanel>
@@ -97,9 +101,17 @@
                    Visibility="{Binding TimeScaleNightRow.Description, Converter={StaticResource StringToVis}}" />
         <TextBox MinHeight="32"
                  Style="{StaticResource InputBox}"
-                 Text="{Binding TimeScaleNightRow.Value, UpdateSourceTrigger=PropertyChanged}"
-                 ToolTip="Night speed relative to the day. The night's real speed is this number times wm_timeScale." />
+                 Text="{Binding TimeScaleNightText, UpdateSourceTrigger=PropertyChanged}"
+                 ToolTip="Night speed relative to the day. Empty until both lengths can be calculated." />
       </StackPanel>
+
+      <Button Margin="0,12,0,12"
+              HorizontalAlignment="Left"
+              Command="{Binding ApplyCommand}"
+              Content="Apply"
+              Style="{StaticResource PrimaryButton}" />
+
+      <TextBlock Style="{StaticResource MutedText}" Text="{Binding SavedSettings}" />
     </StackPanel>
   </Border>
 </UserControl>

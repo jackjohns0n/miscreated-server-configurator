@@ -1,4 +1,4 @@
-using System.Globalization;
+using System.Windows.Input;
 
 using MiscreatedServerConfigurator.Core.Weather;
 
@@ -6,7 +6,8 @@ namespace MiscreatedServerConfigurator.App.ViewModels;
 
 /// <summary>
 /// The only editor for <c>wm_timeScale</c> and <c>wm_timeScaleNight</c>.
-/// Hours and the two scales stay in sync, and each scale can be turned off.
+/// Hour and scale boxes are a pending preview. Apply writes them, and only when both are valid.
+/// Clearing a box leaves the open file unchanged.
 /// </summary>
 public sealed class DayNightPanelViewModel : ObservableObject
 {
@@ -14,25 +15,37 @@ public sealed class DayNightPanelViewModel : ObservableObject
     private CvarRowViewModel? _timeScaleNight;
     private string _dayHours = string.Empty;
     private string _nightHours = string.Empty;
-    private string _currentSettings = string.Empty;
-    private string? _validationMessage;
+    private string _timeScaleText = string.Empty;
+    private string _timeScaleNightText = string.Empty;
+    private string _previewMessage = "Enter a day length to calculate wm_timeScale. Enter a night length to calculate wm_timeScaleNight.";
+    private string _savedSettings = string.Empty;
+    private bool _canApply;
     private int _suppress;
 
-    /// <summary>The <c>wm_timeScale</c> row, edited inside this panel.</summary>
+    /// <summary>Creates the panel. Rows are attached after a file is loaded.</summary>
+    public DayNightPanelViewModel()
+    {
+        ApplyCommand = new RelayCommand(Apply, () => CanApply && _timeScale is not null && _timeScaleNight is not null);
+    }
+
+    /// <summary>Writes the pending scales into the open file.</summary>
+    public RelayCommand ApplyCommand { get; }
+
+    /// <summary>The <c>wm_timeScale</c> row. The checkbox writes the file; the text box is only a preview.</summary>
     public CvarRowViewModel? TimeScaleRow
     {
         get => _timeScale;
         private set => SetProperty(ref _timeScale, value);
     }
 
-    /// <summary>The <c>wm_timeScaleNight</c> row, edited inside this panel.</summary>
+    /// <summary>The <c>wm_timeScaleNight</c> row. The checkbox writes the file; the text box is only a preview.</summary>
     public CvarRowViewModel? TimeScaleNightRow
     {
         get => _timeScaleNight;
         private set => SetProperty(ref _timeScaleNight, value);
     }
 
-    /// <summary>Desired real-time day length, in hours.</summary>
+    /// <summary>Desired real-time day length, in hours. Empty means the day scale is pending.</summary>
     public string DayHours
     {
         get => _dayHours;
@@ -43,11 +56,11 @@ public sealed class DayNightPanelViewModel : ObservableObject
                 return;
             }
 
-            PushHoursToScales();
+            Publish(DayNightDraft.FromHours(_dayHours, _nightHours), fromHours: true);
         }
     }
 
-    /// <summary>Desired real-time night length, in hours.</summary>
+    /// <summary>Desired real-time night length, in hours. Empty means the night scale is pending.</summary>
     public string NightHours
     {
         get => _nightHours;
@@ -58,171 +71,175 @@ public sealed class DayNightPanelViewModel : ObservableObject
                 return;
             }
 
-            PushHoursToScales();
+            Publish(DayNightDraft.FromHours(_dayHours, _nightHours), fromHours: true);
         }
     }
 
-    /// <summary>Real-time lengths implied by the current scales, and which scales are turned off.</summary>
-    public string CurrentSettings
+    /// <summary>Pending <c>wm_timeScale</c>. Empty when the day length cannot be calculated. Not the saved value.</summary>
+    public string TimeScaleText
     {
-        get => _currentSettings;
-        private set => SetProperty(ref _currentSettings, value);
+        get => _timeScaleText;
+        set
+        {
+            if (!SetProperty(ref _timeScaleText, value) || _suppress > 0)
+            {
+                return;
+            }
+
+            Publish(DayNightDraft.FromScales(_timeScaleText, _timeScaleNightText), fromHours: false);
+        }
     }
 
-    /// <summary>Shown only in this panel, when the hour boxes are not a usable pair. Null otherwise.</summary>
-    public string? ValidationMessage
+    /// <summary>Pending <c>wm_timeScaleNight</c>. Empty when the night length cannot be calculated. Not the saved value.</summary>
+    public string TimeScaleNightText
     {
-        get => _validationMessage;
-        private set => SetProperty(ref _validationMessage, value);
+        get => _timeScaleNightText;
+        set
+        {
+            if (!SetProperty(ref _timeScaleNightText, value) || _suppress > 0)
+            {
+                return;
+            }
+
+            Publish(DayNightDraft.FromScales(_timeScaleText, _timeScaleNightText), fromHours: false);
+        }
     }
 
-    /// <summary>Points the panel at the two scale rows and fills the hour boxes from them.</summary>
+    /// <summary>Pending readout. Names a missing box, or describes the scales that Apply would write.</summary>
+    public string PreviewMessage
+    {
+        get => _previewMessage;
+        private set => Assign(ref _previewMessage, value);
+    }
+
+    /// <summary>What the open file holds right now, including lengths and any scale that is turned off.</summary>
+    public string SavedSettings
+    {
+        get => _savedSettings;
+        private set => Assign(ref _savedSettings, value);
+    }
+
+    /// <summary>True when Apply would write both scales. False while either side is empty or invalid.</summary>
+    public bool CanApply
+    {
+        get => _canApply;
+        private set => Assign(ref _canApply, value);
+    }
+
+    /// <summary>Points the panel at the two scale rows and copies their saved values into the pending boxes.</summary>
     /// <param name="timeScale">The <c>wm_timeScale</c> row.</param>
     /// <param name="timeScaleNight">The <c>wm_timeScaleNight</c> row.</param>
     public void Attach(CvarRowViewModel? timeScale, CvarRowViewModel? timeScaleNight)
     {
         if (_timeScale is not null)
         {
-            _timeScale.Edited -= OnScaleEdited;
+            _timeScale.Edited -= OnSavedEdited;
         }
 
         if (_timeScaleNight is not null)
         {
-            _timeScaleNight.Edited -= OnScaleEdited;
+            _timeScaleNight.Edited -= OnSavedEdited;
         }
 
         _timeScale = timeScale;
         _timeScaleNight = timeScaleNight;
         if (_timeScale is not null)
         {
-            _timeScale.Edited += OnScaleEdited;
+            _timeScale.Edited += OnSavedEdited;
         }
 
         if (_timeScaleNight is not null)
         {
-            _timeScaleNight.Edited += OnScaleEdited;
+            _timeScaleNight.Edited += OnSavedEdited;
         }
 
         Raise(nameof(TimeScaleRow));
         Raise(nameof(TimeScaleNightRow));
-        _suppress++;
-        if (TryReadScales(out var day, out var night, out _))
-        {
-            DayHours = DayNightCalculator.FormatHours(day);
-            NightHours = DayNightCalculator.FormatHours(night);
-        }
-        else
-        {
-            DayHours = string.Empty;
-            NightHours = string.Empty;
-        }
 
+        var savedScale = _timeScale?.Value ?? string.Empty;
+        var savedNight = _timeScaleNight?.Value ?? string.Empty;
+        var draft = DayNightDraft.FromScales(savedScale, savedNight);
+        _suppress++;
+        DayHours = draft.DayHours;
+        NightHours = draft.NightHours;
+        TimeScaleText = savedScale;
+        TimeScaleNightText = savedNight;
         _suppress--;
-        ValidationMessage = null;
-        UpdateStatus();
+        Publish(draft, fromHours: false);
+        UpdateSaved();
     }
 
-    private void OnScaleEdited(object? sender, EventArgs e)
+    private void OnSavedEdited(object? sender, EventArgs e)
     {
         if (_suppress > 0)
         {
             return;
         }
 
-        PullHoursFromScales();
-        UpdateStatus();
+        UpdateSaved();
     }
 
-    private void PushHoursToScales()
+    private void Publish(DayNightDraft draft, bool fromHours)
     {
-        if (string.IsNullOrWhiteSpace(_dayHours) && string.IsNullOrWhiteSpace(_nightHours))
+        _suppress++;
+        if (fromHours)
         {
-            ValidationMessage = null;
-            UpdateStatus();
-            return;
+            Assign(ref _timeScaleText, draft.TimeScale, nameof(TimeScaleText));
+            Assign(ref _timeScaleNightText, draft.TimeScaleNight, nameof(TimeScaleNightText));
+        }
+        else
+        {
+            Assign(ref _dayHours, draft.DayHours, nameof(DayHours));
+            Assign(ref _nightHours, draft.NightHours, nameof(NightHours));
         }
 
-        if (!TryParse(_dayHours, out var day) || !TryParse(_nightHours, out var night))
-        {
-            ValidationMessage = "Day and night lengths must be numbers of hours.";
-            UpdateStatus();
-            return;
-        }
+        _suppress--;
+        PreviewMessage = draft.Message;
+        CanApply = draft.CanApply;
+        CommandManager.InvalidateRequerySuggested();
+    }
 
-        if (!DayNightCalculator.TryFromRealHours(day, night, out var scales, out var error))
-        {
-            ValidationMessage = error;
-            UpdateStatus();
-            return;
-        }
-
+    private void Apply()
+    {
         if (_timeScale is null || _timeScaleNight is null)
         {
-            ValidationMessage = "wm_timeScale and wm_timeScaleNight are not in this file.";
-            UpdateStatus();
             return;
         }
 
-        ValidationMessage = null;
-        _suppress++;
-        _timeScale.Value = scales.TimeScaleText;
-        _timeScaleNight.Value = scales.TimeScaleNightText;
-        _suppress--;
-        UpdateStatus();
-    }
-
-    private void PullHoursFromScales()
-    {
-        if (!TryReadScales(out var day, out var night, out _))
+        var draft = DayNightDraft.FromScales(_timeScaleText, _timeScaleNightText);
+        if (!draft.CanApply)
         {
+            Publish(draft, fromHours: false);
             return;
         }
 
         _suppress++;
-        DayHours = DayNightCalculator.FormatHours(day);
-        NightHours = DayNightCalculator.FormatHours(night);
+        _timeScale.Value = draft.TimeScale;
+        _timeScaleNight.Value = draft.TimeScaleNight;
+        TimeScaleText = draft.TimeScale;
+        TimeScaleNightText = draft.TimeScaleNight;
+        DayHours = draft.DayHours;
+        NightHours = draft.NightHours;
         _suppress--;
-        ValidationMessage = null;
+        Publish(draft, fromHours: false);
+        UpdateSaved();
     }
 
-    private void UpdateStatus()
+    private void UpdateSaved()
     {
-        if (_timeScale is null || _timeScaleNight is null)
-        {
-            CurrentSettings = "wm_timeScale and wm_timeScaleNight are not in this file.";
-            return;
-        }
-
-        if (!TryReadScales(out var day, out var night, out var error))
-        {
-            CurrentSettings = error ?? "wm_timeScale and wm_timeScaleNight must be numbers to show a day and night length.";
-            return;
-        }
-
-        CurrentSettings = DayNightCalculator.DescribeCurrent(day, night, _timeScale.Enabled, _timeScaleNight.Enabled);
+        SavedSettings = DayNightDraft.DescribeSaved(
+            _timeScale?.Value,
+            _timeScaleNight?.Value,
+            _timeScale?.Enabled ?? false,
+            _timeScaleNight?.Enabled ?? false);
     }
 
-    private bool TryReadScales(out double dayHours, out double nightHours, out string? error)
+    /// <summary>Sets a field and still notifies when the value is unchanged, so an empty box refreshes its dependents.</summary>
+    private void Assign<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
     {
-        dayHours = 0;
-        nightHours = 0;
-        if (_timeScale is null || _timeScaleNight is null)
+        if (!SetProperty(ref field, value, propertyName))
         {
-            error = "wm_timeScale and wm_timeScaleNight are not in this file.";
-            return false;
+            Raise(propertyName);
         }
-
-        if (!TryParse(_timeScale.Value, out var scale) || !TryParse(_timeScaleNight.Value, out var scaleNight))
-        {
-            error = "wm_timeScale and wm_timeScaleNight must be numbers to show a day and night length.";
-            return false;
-        }
-
-        return DayNightCalculator.TryToRealHours(scale, scaleNight, out dayHours, out nightHours, out error);
-    }
-
-    private static bool TryParse(string text, out double hours)
-    {
-        return double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out hours);
     }
 }
