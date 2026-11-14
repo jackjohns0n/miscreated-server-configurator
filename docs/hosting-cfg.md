@@ -141,9 +141,12 @@ These are recorded so the editor does not quietly "fix" a template value. The te
 
 No formula is known here for turning the four food and water decay CVARs into minutes until a player is hungry or thirsty. This version does not calculate one.
 
+## Day and night length
+
+The Weather page edits `wm_timeScale` and `wm_timeScaleNight` only in the day/night panel. Enter the real hours you want, or edit the two scales in that panel; either side updates the other. Apply writes them, and only when both are valid. Clearing a box leaves the file unchanged and the saved values stay on their own line. Each scale can be turned off, and the server then uses its stock default for that CVAR. `wm_timeScaleWeather` stays in the list and is not part of the day or night length. The explanation and the formula are in [day-night-calculator.md](day-night-calculator.md).
+
 ## Not in this version
 
-- The day/night calculator (`wm_timeScale` and `wm_timeScaleNight` from a desired length in hours). You can still type those two CVARs by hand.
 - Publishing or updating a Workshop mod. `steam_ugc` only stores ids.
 - RCON, bans, whitelist commands, or restarting a live server. The template's header and MisServer-101 keep those off the config file: over RCON the separator is a space, and the change lasts until restart.
 - Deploying the file to a host.

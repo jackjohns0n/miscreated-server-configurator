@@ -6,6 +6,7 @@ using MiscreatedServerConfigurator.App.Theming;
 using MiscreatedServerConfigurator.Core.Catalog;
 using MiscreatedServerConfigurator.Core.Hosting;
 using MiscreatedServerConfigurator.Core.Theming;
+using MiscreatedServerConfigurator.Core.Weather;
 
 namespace MiscreatedServerConfigurator.App.ViewModels;
 
@@ -44,6 +45,7 @@ public sealed class MainViewModel : ObservableObject
         Warnings = new ObservableCollection<ConfigWarning>();
         VisibleWarnings = new ObservableCollection<ConfigWarning>();
         ShowWarningCommand = new RelayCommand(ShowFirstWarning, () => WarningCount > 0);
+        DayNight = new DayNightPanelViewModel();
         _session = HostingConfigSession.Load(string.Empty);
         _loadedText = string.Empty;
         Load(ServerTemplate.LoadText(), path: null);
@@ -60,6 +62,9 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>Selects the first section that has a warning.</summary>
     public RelayCommand ShowWarningCommand { get; }
+
+    /// <summary>Day/night calculator shown on the weather page.</summary>
+    public DayNightPanelViewModel DayNight { get; }
 
     /// <summary>How many validation warnings exist. Zero hides the status link.</summary>
     public int WarningCount => Warnings.Count;
@@ -227,6 +232,7 @@ public sealed class MainViewModel : ObservableObject
         Sections.Clear();
 
         var rowsByKey = new Dictionary<string, CvarRowViewModel>(StringComparer.Ordinal);
+        var dayNightRows = new List<CvarRowViewModel>();
         foreach (var section in _session.Catalog.SectionsInOrder)
         {
             var blocks = new ObservableCollection<BlockViewModel>();
@@ -241,8 +247,14 @@ public sealed class MainViewModel : ObservableObject
                 foreach (var entry in block.Entries)
                 {
                     var row = CreateRow(_session.GetRequired(entry.Key), entry);
-                    rows.Add(row);
                     rowsByKey[entry.Key] = row;
+                    if (DayNightCalculator.IsPanelKey(entry.Key))
+                    {
+                        dayNightRows.Add(row);
+                        continue;
+                    }
+
+                    rows.Add(row);
                 }
 
                 blocks.Add(new BlockViewModel(block.Title, block.HeaderLines, block.BodyNotes, rows));
@@ -262,6 +274,10 @@ public sealed class MainViewModel : ObservableObject
 
         AttachFileOnlyKeys(rowsByKey);
         AttachMatrix(rowsByKey);
+        Sections.First(item => item.Section == CvarSection.Weather).TrackUnlistedRows(dayNightRows);
+        DayNight.Attach(
+            rowsByKey.GetValueOrDefault(DayNightCalculator.TimeScaleKey),
+            rowsByKey.GetValueOrDefault(DayNightCalculator.TimeScaleNightKey));
 
         SectionViewModel? selected = null;
         if (keepOther)

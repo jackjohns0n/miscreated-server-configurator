@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 
 using MiscreatedServerConfigurator.Core.Catalog;
+using MiscreatedServerConfigurator.Core.Weather;
 
 namespace MiscreatedServerConfigurator.App.ViewModels;
 
@@ -243,6 +244,7 @@ public sealed class DamageMatrixViewModel
 /// </summary>
 public sealed class SectionViewModel : ObservableObject
 {
+    private readonly List<CvarRowViewModel> _unlistedRows = new();
     private int _enabledCount;
     private int _warningCount;
     private bool _showMatrix;
@@ -283,6 +285,9 @@ public sealed class SectionViewModel : ObservableObject
 
     /// <summary>True on the faction damage matrix page, including while a search replaces the grid with a list.</summary>
     public bool IsDamageSection => Section == CvarSection.FactionDamage;
+
+    /// <summary>True on the weather page, where the day/night calculator is shown.</summary>
+    public bool IsWeatherSection => Section == CvarSection.Weather;
 
     /// <summary>Informational note for the section, or null.</summary>
     public string? Note { get; }
@@ -340,6 +345,17 @@ public sealed class SectionViewModel : ObservableObject
         private set => SetProperty(ref _showEmptySearch, value);
     }
 
+    /// <summary>
+    /// Counts CVARs that stay out of the row list. The day/night scales are edited in the panel instead.
+    /// </summary>
+    /// <param name="rows">Rows to include in the live-setting count.</param>
+    public void TrackUnlistedRows(IEnumerable<CvarRowViewModel> rows)
+    {
+        _unlistedRows.Clear();
+        _unlistedRows.AddRange(rows);
+        RefreshEnabledCount();
+    }
+
     /// <summary>Recounts live CVARs.</summary>
     public void RefreshEnabledCount()
     {
@@ -352,6 +368,14 @@ public sealed class SectionViewModel : ObservableObject
                 {
                     count++;
                 }
+            }
+        }
+
+        foreach (var row in _unlistedRows)
+        {
+            if (row.Enabled)
+            {
+                count++;
             }
         }
 
@@ -381,6 +405,7 @@ public sealed class SectionViewModel : ObservableObject
             }
         }
 
-        ShowEmptySearch = searching && !any;
+        var panelMatch = Section == CvarSection.Weather && DayNightCalculator.PanelMatchesSearch(query);
+        ShowEmptySearch = searching && !any && !panelMatch;
     }
 }

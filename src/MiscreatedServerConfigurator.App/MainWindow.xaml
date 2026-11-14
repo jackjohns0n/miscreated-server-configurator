@@ -215,6 +215,16 @@
                        Text="{Binding SelectedSection.PreambleText}" />
           </Expander>
 
+          <ContentControl Margin="0,0,0,0"
+                          Content="{Binding DayNight}"
+                          Visibility="{Binding SelectedSection.IsWeatherSection, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed, TargetNullValue=Collapsed}">
+            <ContentControl.ContentTemplate>
+              <DataTemplate>
+                <views:DayNightPanel />
+              </DataTemplate>
+            </ContentControl.ContentTemplate>
+          </ContentControl>
+
           <ItemsControl ItemsSource="{Binding SelectedSection.Blocks}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>

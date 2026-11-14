@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Day/night calculator on the Weather page. Desired real hours become `wm_timeScale` and `wm_timeScaleNight` with the formula from [Miscalculator](https://github.com/jackjohns0n/Day_Night_Calculator) (`main.js` lines 77–83). Those two CVARs are edited only in the panel, including each one's on/off toggle, and either side updates the other. The panel explains the formula. See `docs/day-night-calculator.md`.
+
+### Changed
+
 - Theme setting: Dark, Light, or Follow system. Follow system is the default and updates when the Windows app theme changes. The choice is saved for the next launch.
 
 ### Fixed
 
+- Clearing or invalidating a day or night length no longer leaves the previous `wm_timeScale` and `wm_timeScaleNight` numbers on screen. The pending scales clear, the line under the boxes says what is missing, and Apply stays off. The file is unchanged until Apply, and the saved values stay on their own line. The same rules apply when a scale box is cleared.
 - Page titles, group headings, and monospace CVAR names use the theme text color. Those styles had been replacing the themed text style and falling back to black.
 - Body text is 15pt. Page titles are 24pt and group headings 18pt, both semibold.
 - The Theme and Unused CVARs boxes are 32px tall, with room for the full label, in line with the Find box and the toolbar buttons.
