@@ -7,23 +7,23 @@
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <conv:StringPresenceToVisibilityConverter x:Key="StringToVis" />
 
-    <SolidColorBrush x:Key="Brush.Window" Color="#F4F6F8" />
-    <SolidColorBrush x:Key="Brush.Surface" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="Brush.Field" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Brush.Window" Color="#E9ECEF" />
+    <SolidColorBrush x:Key="Brush.Surface" Color="#F4F5F7" />
+    <SolidColorBrush x:Key="Brush.Field" Color="#F1F3F5" />
     <SolidColorBrush x:Key="Brush.Ink" Color="#1F2933" />
     <SolidColorBrush x:Key="Brush.Muted" Color="#445266" />
-    <SolidColorBrush x:Key="Brush.Line" Color="#D9E2EC" />
+    <SolidColorBrush x:Key="Brush.Line" Color="#D0D4D8" />
     <SolidColorBrush x:Key="Brush.Accent" Color="#1F4E79" />
-    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#E6F0F8" />
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#E2E8EF" />
     <SolidColorBrush x:Key="Brush.AccentHover" Color="#163E64" />
-    <SolidColorBrush x:Key="Brush.NavHover" Color="#F7F9FB" />
+    <SolidColorBrush x:Key="Brush.NavHover" Color="#E3E6EA" />
     <SolidColorBrush x:Key="Brush.OnAccent" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="Brush.WarnBg" Color="#FFF8EB" />
+    <SolidColorBrush x:Key="Brush.WarnBg" Color="#F3EDE3" />
     <SolidColorBrush x:Key="Brush.WarnInk" Color="#8A5A00" />
-    <SolidColorBrush x:Key="Brush.WarnLine" Color="#F0D7A2" />
-    <SolidColorBrush x:Key="Brush.InfoBg" Color="#F3F7FB" />
+    <SolidColorBrush x:Key="Brush.WarnLine" Color="#E4D3B0" />
+    <SolidColorBrush x:Key="Brush.InfoBg" Color="#E7EEF4" />
     <SolidColorBrush x:Key="Brush.InfoInk" Color="#243B53" />
-    <SolidColorBrush x:Key="Brush.DangerBg" Color="#FDECEC" />
+    <SolidColorBrush x:Key="Brush.DangerBg" Color="#F6E8E8" />
     <SolidColorBrush x:Key="Brush.DangerInk" Color="#9B1C1C" />
 
     <Style TargetType="Window">

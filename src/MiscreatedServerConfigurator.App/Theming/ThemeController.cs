@@ -172,25 +172,27 @@ internal static class ThemeController
             SettingsName);
     }
 
+    // Light surfaces stay off white. #FFFFFF is only Brush.OnAccent, the label on the blue Save button.
+    // Ink and muted both clear WCAG AA on the page, cards, and fields.
     private static readonly Dictionary<string, Color> Light = new(StringComparer.Ordinal)
     {
-        ["Brush.Window"] = Color.FromRgb(0xF4, 0xF6, 0xF8),
-        ["Brush.Surface"] = Color.FromRgb(0xFF, 0xFF, 0xFF),
-        ["Brush.Field"] = Color.FromRgb(0xFF, 0xFF, 0xFF),
+        ["Brush.Window"] = Color.FromRgb(0xE9, 0xEC, 0xEF),
+        ["Brush.Surface"] = Color.FromRgb(0xF4, 0xF5, 0xF7),
+        ["Brush.Field"] = Color.FromRgb(0xF1, 0xF3, 0xF5),
         ["Brush.Ink"] = Color.FromRgb(0x1F, 0x29, 0x33),
         ["Brush.Muted"] = Color.FromRgb(0x44, 0x52, 0x66),
-        ["Brush.Line"] = Color.FromRgb(0xD9, 0xE2, 0xEC),
+        ["Brush.Line"] = Color.FromRgb(0xD0, 0xD4, 0xD8),
         ["Brush.Accent"] = Color.FromRgb(0x1F, 0x4E, 0x79),
-        ["Brush.AccentSoft"] = Color.FromRgb(0xE6, 0xF0, 0xF8),
+        ["Brush.AccentSoft"] = Color.FromRgb(0xE2, 0xE8, 0xEF),
         ["Brush.AccentHover"] = Color.FromRgb(0x16, 0x3E, 0x64),
-        ["Brush.NavHover"] = Color.FromRgb(0xF7, 0xF9, 0xFB),
+        ["Brush.NavHover"] = Color.FromRgb(0xE3, 0xE6, 0xEA),
         ["Brush.OnAccent"] = Color.FromRgb(0xFF, 0xFF, 0xFF),
-        ["Brush.WarnBg"] = Color.FromRgb(0xFF, 0xF8, 0xEB),
+        ["Brush.WarnBg"] = Color.FromRgb(0xF3, 0xED, 0xE3),
         ["Brush.WarnInk"] = Color.FromRgb(0x8A, 0x5A, 0x00),
-        ["Brush.WarnLine"] = Color.FromRgb(0xF0, 0xD7, 0xA2),
-        ["Brush.InfoBg"] = Color.FromRgb(0xF3, 0xF7, 0xFB),
+        ["Brush.WarnLine"] = Color.FromRgb(0xE4, 0xD3, 0xB0),
+        ["Brush.InfoBg"] = Color.FromRgb(0xE7, 0xEE, 0xF4),
         ["Brush.InfoInk"] = Color.FromRgb(0x24, 0x3B, 0x53),
-        ["Brush.DangerBg"] = Color.FromRgb(0xFD, 0xEC, 0xEC),
+        ["Brush.DangerBg"] = Color.FromRgb(0xF6, 0xE8, 0xE8),
         ["Brush.DangerInk"] = Color.FromRgb(0x9B, 0x1C, 0x1C),
     };
 
