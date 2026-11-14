@@ -37,11 +37,46 @@ public readonly record struct DayNightScales(double TimeScale, double TimeScaleN
 /// </remarks>
 public static class DayNightCalculator
 {
-    /// <summary>Day divisor used by Miscalculator, in minutes.</summary>
+    /// <summary>The day-speed CVAR. Edited in the day/night panel, not as its own row.</summary>
+    public const string TimeScaleKey = "wm_timeScale";
+
+    /// <summary>The night-speed CVAR. Edited in the day/night panel, not as its own row.</summary>
+    public const string TimeScaleNightKey = "wm_timeScaleNight";
+
+    /// <summary>Day divisor used by Miscalculator, in minutes. Divided by 60 this is 13 in-game hours of daytime.</summary>
     public const double DayDivisorMinutes = 780;
 
-    /// <summary>Night divisor used by Miscalculator, in minutes.</summary>
+    /// <summary>Night divisor used by Miscalculator, in minutes. Divided by 60 this is 11 in-game hours of nighttime.</summary>
     public const double NightDivisorMinutes = 660;
+
+    /// <summary>True for the two scale CVARs the day/night panel owns.</summary>
+    /// <param name="key">A CVAR name.</param>
+    /// <returns><see langword="true"/> for <c>wm_timeScale</c> and <c>wm_timeScaleNight</c>.</returns>
+    public static bool IsPanelKey(string key)
+    {
+        return key == TimeScaleKey || key == TimeScaleNightKey;
+    }
+
+    /// <summary>
+    /// True when a search should keep the Weather page from looking empty, because the day/night panel matches.
+    /// </summary>
+    /// <param name="query">The search box text.</param>
+    /// <returns><see langword="true"/> when the query is found in the panel's keys or labels.</returns>
+    public static bool PanelMatchesSearch(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return false;
+        }
+
+        var text = query.Trim();
+        return TimeScaleKey.Contains(text, StringComparison.OrdinalIgnoreCase)
+            || TimeScaleNightKey.Contains(text, StringComparison.OrdinalIgnoreCase)
+            || "day length".Contains(text, StringComparison.OrdinalIgnoreCase)
+            || "night length".Contains(text, StringComparison.OrdinalIgnoreCase)
+            || "day speed".Contains(text, StringComparison.OrdinalIgnoreCase)
+            || "night speed".Contains(text, StringComparison.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Calculates the two scales. Hours must be finite and greater than zero, matching the original check.
@@ -123,6 +158,41 @@ public static class DayNightCalculator
     public static string FormatScale(double value)
     {
         return value.ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Formats a real-time length with up to three decimal places and no trailing zeros.</summary>
+    /// <param name="hours">A length in hours.</param>
+    /// <returns>Invariant text such as <c>6.5</c> or <c>1.375</c>.</returns>
+    public static string FormatHours(double hours)
+    {
+        return hours.ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// The reverse readout: the real-time lengths implied by the current scales, plus a sentence for each scale that is turned off.
+    /// </summary>
+    /// <param name="dayHours">Day length implied by <c>wm_timeScale</c>, in hours.</param>
+    /// <param name="nightHours">Night length implied by both scales, in hours.</param>
+    /// <param name="timeScaleWritten">True when <c>wm_timeScale</c> is a live line.</param>
+    /// <param name="timeScaleNightWritten">True when <c>wm_timeScaleNight</c> is a live line.</param>
+    /// <returns>The sentence shown under the hour boxes.</returns>
+    public static string DescribeCurrent(double dayHours, double nightHours, bool timeScaleWritten, bool timeScaleNightWritten)
+    {
+        var text = "Current settings: "
+            + FormatHours(dayHours) + "-hour day, "
+            + FormatHours(nightHours) + "-hour night ("
+            + FormatHours(dayHours + nightHours) + "-hour cycle).";
+        if (!timeScaleWritten)
+        {
+            text += " " + TimeScaleKey + " is turned off, so the server will use its default for it.";
+        }
+
+        if (!timeScaleNightWritten)
+        {
+            text += " " + TimeScaleNightKey + " is turned off, so the server will use its default for it.";
+        }
+
+        return text;
     }
 
     /// <summary>Rounds half away from zero to two decimal places, matching JavaScript <c>toFixed(2)</c> for these magnitudes.</summary>

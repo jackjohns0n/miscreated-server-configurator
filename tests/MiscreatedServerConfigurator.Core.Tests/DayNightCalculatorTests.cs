@@ -82,6 +82,55 @@ public sealed class DayNightCalculatorTests
         Assert.Null(error);
         Assert.Equal(6.5, dayHours);
         Assert.Equal(1.375, nightHours);
+        Assert.Equal(
+            "Current settings: 6.5-hour day, 1.375-hour night (7.875-hour cycle).",
+            DayNightCalculator.DescribeCurrent(dayHours, nightHours, timeScaleWritten: true, timeScaleNightWritten: true));
+    }
+
+    [Fact]
+    public void Stock_day_speed_with_night_at_the_same_speed_is_a_twelve_hour_cycle()
+    {
+        // The template comment's "full day in 12 real hours" at wm_timeScale=2.
+        // That is the whole cycle only when wm_timeScaleNight=1: 6.5 + 5.5.
+        Assert.True(DayNightCalculator.TryToRealHours(2, 1, out var dayHours, out var nightHours, out _));
+        Assert.Equal(6.5, dayHours);
+        Assert.Equal(5.5, nightHours);
+        Assert.Equal(12, dayHours + nightHours);
+        Assert.True(DayNightCalculator.TryFromRealHours(6.5, 5.5, out var scales, out _));
+        Assert.Equal(2, scales.TimeScale);
+        Assert.Equal(1, scales.TimeScaleNight);
+    }
+
+    [Fact]
+    public void Stock_scales_round_trip_through_the_hour_boxes()
+    {
+        Assert.True(DayNightCalculator.TryFromRealHours(6.5, 1.375, out var scales, out _));
+        Assert.Equal(2, scales.TimeScale);
+        Assert.Equal(4, scales.TimeScaleNight);
+    }
+
+    [Fact]
+    public void Describe_names_each_scale_that_is_turned_off()
+    {
+        var nightOff = DayNightCalculator.DescribeCurrent(6.5, 1.375, timeScaleWritten: true, timeScaleNightWritten: false);
+        Assert.Equal(
+            "Current settings: 6.5-hour day, 1.375-hour night (7.875-hour cycle). wm_timeScaleNight is turned off, so the server will use its default for it.",
+            nightOff);
+
+        var bothOff = DayNightCalculator.DescribeCurrent(6.5, 1.375, timeScaleWritten: false, timeScaleNightWritten: false);
+        Assert.Contains("wm_timeScale is turned off, so the server will use its default for it.", bothOff, StringComparison.Ordinal);
+        Assert.Contains("wm_timeScaleNight is turned off, so the server will use its default for it.", bothOff, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Panel_owns_the_two_scale_keys_and_not_weather_speed()
+    {
+        Assert.True(DayNightCalculator.IsPanelKey("wm_timeScale"));
+        Assert.True(DayNightCalculator.IsPanelKey("wm_timeScaleNight"));
+        Assert.False(DayNightCalculator.IsPanelKey("wm_timeScaleWeather"));
+        Assert.True(DayNightCalculator.PanelMatchesSearch("wm_timeScaleNight"));
+        Assert.True(DayNightCalculator.PanelMatchesSearch("day"));
+        Assert.False(DayNightCalculator.PanelMatchesSearch("wm_timeScaleWeather"));
     }
 
     [Fact]

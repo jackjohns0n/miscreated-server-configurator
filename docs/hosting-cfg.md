@@ -143,7 +143,7 @@ No formula is known here for turning the four food and water decay CVARs into mi
 
 ## Day and night length
 
-The Weather page has a calculator for `wm_timeScale` and `wm_timeScaleNight`. The formula and the credit to the original Miscalculator are in [day-night-calculator.md](day-night-calculator.md). Apply writes the two values into the open file and marks it changed. You can still type those CVARs by hand.
+The Weather page edits `wm_timeScale` and `wm_timeScaleNight` only in the day/night panel. Enter the real hours you want, or edit the two scales in that panel; either side updates the other. Each one can be turned off, and the server then uses its stock default for that CVAR. `wm_timeScaleWeather` stays in the list and is not part of the day or night length. The explanation and the formula are in [day-night-calculator.md](day-night-calculator.md).
 
 ## Not in this version
 

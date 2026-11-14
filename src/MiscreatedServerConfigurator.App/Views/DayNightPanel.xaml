@@ -5,10 +5,36 @@
     <StackPanel>
       <TextBlock Style="{StaticResource BlockTitle}" Text="Day / night length" />
       <TextBlock Style="{StaticResource MutedText}"
-                 Margin="0,0,0,12"
-                 Text="Enter the real hours you want. Apply writes wm_timeScale and wm_timeScaleNight. The formula is the one from Miscalculator." />
+                 Text="Enter how long you want the day and the night to last, in real-world hours. The panel calculates wm_timeScale (day speed) and wm_timeScaleNight (night speed relative to the day). Those two settings are edited only here." />
 
-      <Grid Margin="0,0,0,8">
+      <Expander Margin="0,8,0,4">
+        <Expander.Header>
+          <TextBlock FontWeight="SemiBold"
+                     Foreground="{DynamicResource Brush.Ink}"
+                     Text="How this works" />
+        </Expander.Header>
+        <StackPanel Margin="22,4,0,8">
+          <TextBlock Style="{StaticResource MutedText}"
+                     Margin="0,0,0,8"
+                     Text="wm_timeScale is how fast the day runs. A larger number makes the day pass in fewer real hours. wm_timeScaleNight is how fast the night runs compared with the day. The night's speed against real time is the two numbers multiplied." />
+          <TextBlock Style="{StaticResource MutedText}"
+                     Margin="0,0,0,8"
+                     Text="The formula treats daytime as 13 in-game hours (780 minutes) and nighttime as 11 in-game hours (660 minutes). Divide 13 by the real hours you want the day to last, and that is wm_timeScale. Divide 11 by the real hours you want the night to last, then divide that by the day speed, and that is wm_timeScaleNight. Both are rounded to two decimal places. The night value uses the full day speed, before that rounding." />
+          <TextBlock Style="{StaticResource MutedText}"
+                     Margin="0,0,0,8"
+                     Text="The template's stock values are wm_timeScale=2 and wm_timeScaleNight=4. Read backwards, that is a 6.5-hour day and a 1.375-hour night, 7.875 hours for the whole cycle. The template comment says a setting of 2 makes a full day pass in 12 real hours. That 12 hours is the whole cycle when night runs at the same speed as day (wm_timeScaleNight=1): 6.5 hours of day plus 5.5 hours of night. The stock night value of 4 is faster, so the night is 1.375 hours and the cycle is 7.875 hours, not 12." />
+          <TextBlock Style="{StaticResource MutedText}"
+                     Margin="0,0,0,8"
+                     Text="The Current settings line under the boxes reads the two scale values back into real hours with that same math. The scales are stored to two decimal places, so the hours can sit a little off what you typed." />
+          <TextBlock Style="{StaticResource MutedText}"
+                     Margin="0,0,0,8"
+                     Text="Clear Use this value and that CVAR is not written as a live setting. The server uses its stock default for it, and the Current settings line names the one that is turned off." />
+          <TextBlock Style="{StaticResource MutedText}"
+                     Text="wm_timeScaleWeather is separate. It stays in the list below and does not set the day or night length." />
+        </StackPanel>
+      </Expander>
+
+      <Grid Margin="0,8,0,8">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="12" />
@@ -36,13 +62,44 @@
                  TextWrapping="Wrap"
                  Visibility="{Binding ValidationMessage, Converter={StaticResource StringToVis}}" />
 
-      <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,4" Text="{Binding Preview}" />
-      <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,12" Text="{Binding CurrentCycle}" />
+      <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,12" Text="{Binding CurrentSettings}" />
 
-      <Button HorizontalAlignment="Left"
-              Command="{Binding ApplyCommand}"
-              Content="Apply to hosting.cfg"
-              Style="{StaticResource PrimaryButton}" />
+      <TextBlock Margin="0,4,0,4" FontWeight="SemiBold" Text="Scale values" />
+      <TextBlock Style="{StaticResource MutedText}"
+                 Margin="0,0,0,8"
+                 Text="These are the values written to hosting.cfg. Change the hours above, or edit a scale here. Either side updates the other." />
+
+      <StackPanel Margin="0,0,0,12">
+        <CheckBox Margin="0,0,0,6"
+                  Content="Use this value"
+                  IsChecked="{Binding TimeScaleRow.Enabled, Mode=TwoWay}"
+                  ToolTip="Unchecked CVARs are not written as live settings. The server uses its stock default." />
+        <TextBlock Style="{StaticResource KeyName}" Text="wm_timeScale" />
+        <TextBlock Style="{StaticResource MutedText}"
+                   Margin="0,4,0,6"
+                   Text="{Binding TimeScaleRow.Description}"
+                   Visibility="{Binding TimeScaleRow.Description, Converter={StaticResource StringToVis}}" />
+        <TextBox MinHeight="32"
+                 Style="{StaticResource InputBox}"
+                 Text="{Binding TimeScaleRow.Value, UpdateSourceTrigger=PropertyChanged}"
+                 ToolTip="Day speed. A larger number makes the day pass sooner." />
+      </StackPanel>
+
+      <StackPanel>
+        <CheckBox Margin="0,0,0,6"
+                  Content="Use this value"
+                  IsChecked="{Binding TimeScaleNightRow.Enabled, Mode=TwoWay}"
+                  ToolTip="Unchecked CVARs are not written as live settings. The server uses its stock default." />
+        <TextBlock Style="{StaticResource KeyName}" Text="wm_timeScaleNight" />
+        <TextBlock Style="{StaticResource MutedText}"
+                   Margin="0,4,0,6"
+                   Text="{Binding TimeScaleNightRow.Description}"
+                   Visibility="{Binding TimeScaleNightRow.Description, Converter={StaticResource StringToVis}}" />
+        <TextBox MinHeight="32"
+                 Style="{StaticResource InputBox}"
+                 Text="{Binding TimeScaleNightRow.Value, UpdateSourceTrigger=PropertyChanged}"
+                 ToolTip="Night speed relative to the day. The night's real speed is this number times wm_timeScale." />
+      </StackPanel>
     </StackPanel>
   </Border>
 </UserControl>

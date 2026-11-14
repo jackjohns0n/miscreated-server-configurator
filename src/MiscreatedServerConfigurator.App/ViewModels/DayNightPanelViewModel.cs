@@ -1,12 +1,12 @@
 using System.Globalization;
-using System.Windows.Input;
 
 using MiscreatedServerConfigurator.Core.Weather;
 
 namespace MiscreatedServerConfigurator.App.ViewModels;
 
 /// <summary>
-/// Day/night panel for the weather section. Desired hours in, <c>wm_timeScale</c> and <c>wm_timeScaleNight</c> out.
+/// The only editor for <c>wm_timeScale</c> and <c>wm_timeScaleNight</c>.
+/// Hours and the two scales stay in sync, and each scale can be turned off.
 /// </summary>
 public sealed class DayNightPanelViewModel : ObservableObject
 {
@@ -14,18 +14,23 @@ public sealed class DayNightPanelViewModel : ObservableObject
     private CvarRowViewModel? _timeScaleNight;
     private string _dayHours = string.Empty;
     private string _nightHours = string.Empty;
-    private string _preview = "Enter a day length and a night length in real hours.";
-    private string _currentCycle = string.Empty;
+    private string _currentSettings = string.Empty;
     private string? _validationMessage;
+    private int _suppress;
 
-    /// <summary>Creates the panel. Rows are attached after a file is loaded.</summary>
-    public DayNightPanelViewModel()
+    /// <summary>The <c>wm_timeScale</c> row, edited inside this panel.</summary>
+    public CvarRowViewModel? TimeScaleRow
     {
-        ApplyCommand = new RelayCommand(Apply, CanApply);
+        get => _timeScale;
+        private set => SetProperty(ref _timeScale, value);
     }
 
-    /// <summary>Writes the calculated scales into the open document.</summary>
-    public RelayCommand ApplyCommand { get; }
+    /// <summary>The <c>wm_timeScaleNight</c> row, edited inside this panel.</summary>
+    public CvarRowViewModel? TimeScaleNightRow
+    {
+        get => _timeScaleNight;
+        private set => SetProperty(ref _timeScaleNight, value);
+    }
 
     /// <summary>Desired real-time day length, in hours.</summary>
     public string DayHours
@@ -33,11 +38,12 @@ public sealed class DayNightPanelViewModel : ObservableObject
         get => _dayHours;
         set
         {
-            if (SetProperty(ref _dayHours, value))
+            if (!SetProperty(ref _dayHours, value) || _suppress > 0)
             {
-                UpdatePreview();
-                CommandManager.InvalidateRequerySuggested();
+                return;
             }
+
+            PushHoursToScales();
         }
     }
 
@@ -47,36 +53,30 @@ public sealed class DayNightPanelViewModel : ObservableObject
         get => _nightHours;
         set
         {
-            if (SetProperty(ref _nightHours, value))
+            if (!SetProperty(ref _nightHours, value) || _suppress > 0)
             {
-                UpdatePreview();
-                CommandManager.InvalidateRequerySuggested();
+                return;
             }
+
+            PushHoursToScales();
         }
     }
 
-    /// <summary>Live preview of the scales and the requested cycle length.</summary>
-    public string Preview
+    /// <summary>Real-time lengths implied by the current scales, and which scales are turned off.</summary>
+    public string CurrentSettings
     {
-        get => _preview;
-        private set => SetProperty(ref _preview, value);
+        get => _currentSettings;
+        private set => SetProperty(ref _currentSettings, value);
     }
 
-    /// <summary>Real-time lengths implied by the current scale CVARs.</summary>
-    public string CurrentCycle
-    {
-        get => _currentCycle;
-        private set => SetProperty(ref _currentCycle, value);
-    }
-
-    /// <summary>Shown only in this panel. Null when the inputs are empty or valid.</summary>
+    /// <summary>Shown only in this panel, when the hour boxes are not a usable pair. Null otherwise.</summary>
     public string? ValidationMessage
     {
         get => _validationMessage;
         private set => SetProperty(ref _validationMessage, value);
     }
 
-    /// <summary>Points the panel at the two weather rows in the open document.</summary>
+    /// <summary>Points the panel at the two scale rows and fills the hour boxes from them.</summary>
     /// <param name="timeScale">The <c>wm_timeScale</c> row.</param>
     /// <param name="timeScaleNight">The <c>wm_timeScaleNight</c> row.</param>
     public void Attach(CvarRowViewModel? timeScale, CvarRowViewModel? timeScaleNight)
@@ -103,105 +103,126 @@ public sealed class DayNightPanelViewModel : ObservableObject
             _timeScaleNight.Edited += OnScaleEdited;
         }
 
-        UpdateCurrent();
+        Raise(nameof(TimeScaleRow));
+        Raise(nameof(TimeScaleNightRow));
+        _suppress++;
+        if (TryReadScales(out var day, out var night, out _))
+        {
+            DayHours = DayNightCalculator.FormatHours(day);
+            NightHours = DayNightCalculator.FormatHours(night);
+        }
+        else
+        {
+            DayHours = string.Empty;
+            NightHours = string.Empty;
+        }
+
+        _suppress--;
+        ValidationMessage = null;
+        UpdateStatus();
     }
 
     private void OnScaleEdited(object? sender, EventArgs e)
     {
-        UpdateCurrent();
+        if (_suppress > 0)
+        {
+            return;
+        }
+
+        PullHoursFromScales();
+        UpdateStatus();
     }
 
-    private void UpdatePreview()
+    private void PushHoursToScales()
     {
         if (string.IsNullOrWhiteSpace(_dayHours) && string.IsNullOrWhiteSpace(_nightHours))
         {
             ValidationMessage = null;
-            Preview = "Enter a day length and a night length in real hours.";
+            UpdateStatus();
             return;
         }
 
-        if (!TryParseHours(_dayHours, out var day) || !TryParseHours(_nightHours, out var night))
+        if (!TryParse(_dayHours, out var day) || !TryParse(_nightHours, out var night))
         {
             ValidationMessage = "Day and night lengths must be numbers of hours.";
-            Preview = string.Empty;
+            UpdateStatus();
             return;
         }
 
         if (!DayNightCalculator.TryFromRealHours(day, night, out var scales, out var error))
         {
             ValidationMessage = error;
-            Preview = string.Empty;
+            UpdateStatus();
+            return;
+        }
+
+        if (_timeScale is null || _timeScaleNight is null)
+        {
+            ValidationMessage = "wm_timeScale and wm_timeScaleNight are not in this file.";
+            UpdateStatus();
             return;
         }
 
         ValidationMessage = null;
-        var cycle = day + night;
-        Preview = "wm_timeScale=" + scales.TimeScaleText
-            + "    wm_timeScaleNight=" + scales.TimeScaleNightText
-            + Environment.NewLine
-            + "Real-time cycle: " + FormatHours(day) + " h day + " + FormatHours(night) + " h night = " + FormatHours(cycle) + " h";
+        _suppress++;
+        _timeScale.Value = scales.TimeScaleText;
+        _timeScaleNight.Value = scales.TimeScaleNightText;
+        _suppress--;
+        UpdateStatus();
     }
 
-    private void UpdateCurrent()
+    private void PullHoursFromScales()
     {
-        if (_timeScale is null || _timeScaleNight is null
-            || !TryParseHours(_timeScale.Value, out var scale)
-            || !TryParseHours(_timeScaleNight.Value, out var scaleNight)
-            || !DayNightCalculator.TryToRealHours(scale, scaleNight, out var day, out var night, out _))
+        if (!TryReadScales(out var day, out var night, out _))
         {
-            CurrentCycle = "Current wm_timeScale and wm_timeScaleNight do not imply a real-time length yet.";
             return;
         }
 
-        var implied = "The numbers in the boxes imply " + FormatHours(day) + " h day and " + FormatHours(night) + " h night ("
-            + FormatHours(day + night) + " h cycle).";
-        CurrentCycle = _timeScale.Enabled && _timeScaleNight.Enabled
-            ? implied
-            : implied + " One or both are unused, so the server is not using them.";
+        _suppress++;
+        DayHours = DayNightCalculator.FormatHours(day);
+        NightHours = DayNightCalculator.FormatHours(night);
+        _suppress--;
+        ValidationMessage = null;
     }
 
-    private bool CanApply()
-    {
-        return TryParseHours(_dayHours, out var day)
-            && TryParseHours(_nightHours, out var night)
-            && DayNightCalculator.TryFromRealHours(day, night, out _, out _);
-    }
-
-    private void Apply()
+    private void UpdateStatus()
     {
         if (_timeScale is null || _timeScaleNight is null)
         {
-            ValidationMessage = "wm_timeScale and wm_timeScaleNight are not in this file's catalog.";
+            CurrentSettings = "wm_timeScale and wm_timeScaleNight are not in this file.";
             return;
         }
 
-        if (!TryParseHours(_dayHours, out var day) || !TryParseHours(_nightHours, out var night))
+        if (!TryReadScales(out var day, out var night, out var error))
         {
-            ValidationMessage = "Day and night lengths must be numbers of hours.";
+            CurrentSettings = error ?? "wm_timeScale and wm_timeScaleNight must be numbers to show a day and night length.";
             return;
         }
 
-        if (!DayNightCalculator.TryFromRealHours(day, night, out var scales, out var error))
-        {
-            ValidationMessage = error;
-            return;
-        }
-
-        _timeScale.Value = scales.TimeScaleText;
-        _timeScale.Enabled = true;
-        _timeScaleNight.Value = scales.TimeScaleNightText;
-        _timeScaleNight.Enabled = true;
-        ValidationMessage = null;
-        UpdateCurrent();
+        CurrentSettings = DayNightCalculator.DescribeCurrent(day, night, _timeScale.Enabled, _timeScaleNight.Enabled);
     }
 
-    private static bool TryParseHours(string text, out double hours)
+    private bool TryReadScales(out double dayHours, out double nightHours, out string? error)
+    {
+        dayHours = 0;
+        nightHours = 0;
+        if (_timeScale is null || _timeScaleNight is null)
+        {
+            error = "wm_timeScale and wm_timeScaleNight are not in this file.";
+            return false;
+        }
+
+        if (!TryParse(_timeScale.Value, out var scale) || !TryParse(_timeScaleNight.Value, out var scaleNight))
+        {
+            error = "wm_timeScale and wm_timeScaleNight must be numbers to show a day and night length.";
+            return false;
+        }
+
+        return DayNightCalculator.TryToRealHours(scale, scaleNight, out dayHours, out nightHours, out error);
+    }
+
+    private static bool TryParse(string text, out double hours)
     {
         return double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out hours);
-    }
-
-    private static string FormatHours(double hours)
-    {
-        return hours.ToString("0.###", CultureInfo.InvariantCulture);
     }
 }

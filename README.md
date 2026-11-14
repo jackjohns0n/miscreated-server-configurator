@@ -24,7 +24,7 @@ Not built yet:
 
 - Open a `hosting.cfg`, or start from the commented reference template in `samples/hosting.cfg`.
 - Edit values by section: Core, Logging, Ping, Steam, Weather, Game Rules & Player, AI, Factions, and the faction damage matrix.
-- On Weather, enter a real-time day and night in hours. Apply writes `wm_timeScale` and `wm_timeScaleNight` using the Miscalculator formula. See `docs/day-night-calculator.md`.
+- On Weather, the day/night panel is the only place to edit `wm_timeScale` and `wm_timeScaleNight`. Enter real hours, or edit the scales; each side updates the other. See `docs/day-night-calculator.md`.
 - `http_password` and `sv_servername` are marked required. Passwords and `sv_steamWebAPIKey` are masked.
 - `steam_ugc` is edited as a list of Workshop file ids. Paste a numeric id or a Workshop URL. The file is written as comma-separated ids with no spaces.
 - Unused CVARs can be commented out or left out of the file. Either way the server keeps its stock value.

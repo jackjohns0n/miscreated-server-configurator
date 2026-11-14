@@ -6,6 +6,7 @@ using MiscreatedServerConfigurator.App.Theming;
 using MiscreatedServerConfigurator.Core.Catalog;
 using MiscreatedServerConfigurator.Core.Hosting;
 using MiscreatedServerConfigurator.Core.Theming;
+using MiscreatedServerConfigurator.Core.Weather;
 
 namespace MiscreatedServerConfigurator.App.ViewModels;
 
@@ -231,6 +232,7 @@ public sealed class MainViewModel : ObservableObject
         Sections.Clear();
 
         var rowsByKey = new Dictionary<string, CvarRowViewModel>(StringComparer.Ordinal);
+        var dayNightRows = new List<CvarRowViewModel>();
         foreach (var section in _session.Catalog.SectionsInOrder)
         {
             var blocks = new ObservableCollection<BlockViewModel>();
@@ -245,8 +247,14 @@ public sealed class MainViewModel : ObservableObject
                 foreach (var entry in block.Entries)
                 {
                     var row = CreateRow(_session.GetRequired(entry.Key), entry);
-                    rows.Add(row);
                     rowsByKey[entry.Key] = row;
+                    if (DayNightCalculator.IsPanelKey(entry.Key))
+                    {
+                        dayNightRows.Add(row);
+                        continue;
+                    }
+
+                    rows.Add(row);
                 }
 
                 blocks.Add(new BlockViewModel(block.Title, block.HeaderLines, block.BodyNotes, rows));
@@ -266,9 +274,10 @@ public sealed class MainViewModel : ObservableObject
 
         AttachFileOnlyKeys(rowsByKey);
         AttachMatrix(rowsByKey);
+        Sections.First(item => item.Section == CvarSection.Weather).TrackUnlistedRows(dayNightRows);
         DayNight.Attach(
-            rowsByKey.GetValueOrDefault("wm_timeScale"),
-            rowsByKey.GetValueOrDefault("wm_timeScaleNight"));
+            rowsByKey.GetValueOrDefault(DayNightCalculator.TimeScaleKey),
+            rowsByKey.GetValueOrDefault(DayNightCalculator.TimeScaleNightKey));
 
         SectionViewModel? selected = null;
         if (keepOther)
