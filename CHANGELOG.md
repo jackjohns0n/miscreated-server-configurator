@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Day/night calculator on the Weather page. Desired real hours become `wm_timeScale` and `wm_timeScaleNight` with the formula from [Miscalculator](https://github.com/jackjohns0n/Day_Night_Calculator) (`main.js` lines 77–83). The current scales also show the real-time lengths they imply. See `docs/day-night-calculator.md`.
+
+### Changed
+
 - Theme setting: Dark, Light, or Follow system. Follow system is the default and updates when the Windows app theme changes. The choice is saved for the next launch.
 
 ### Fixed

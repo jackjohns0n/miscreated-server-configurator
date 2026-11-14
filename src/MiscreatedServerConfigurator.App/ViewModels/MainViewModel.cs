@@ -44,6 +44,7 @@ public sealed class MainViewModel : ObservableObject
         Warnings = new ObservableCollection<ConfigWarning>();
         VisibleWarnings = new ObservableCollection<ConfigWarning>();
         ShowWarningCommand = new RelayCommand(ShowFirstWarning, () => WarningCount > 0);
+        DayNight = new DayNightPanelViewModel();
         _session = HostingConfigSession.Load(string.Empty);
         _loadedText = string.Empty;
         Load(ServerTemplate.LoadText(), path: null);
@@ -60,6 +61,9 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>Selects the first section that has a warning.</summary>
     public RelayCommand ShowWarningCommand { get; }
+
+    /// <summary>Day/night calculator shown on the weather page.</summary>
+    public DayNightPanelViewModel DayNight { get; }
 
     /// <summary>How many validation warnings exist. Zero hides the status link.</summary>
     public int WarningCount => Warnings.Count;
@@ -262,6 +266,9 @@ public sealed class MainViewModel : ObservableObject
 
         AttachFileOnlyKeys(rowsByKey);
         AttachMatrix(rowsByKey);
+        DayNight.Attach(
+            rowsByKey.GetValueOrDefault("wm_timeScale"),
+            rowsByKey.GetValueOrDefault("wm_timeScaleNight"));
 
         SectionViewModel? selected = null;
         if (keepOther)

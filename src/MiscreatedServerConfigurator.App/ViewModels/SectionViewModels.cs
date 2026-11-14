@@ -284,6 +284,9 @@ public sealed class SectionViewModel : ObservableObject
     /// <summary>True on the faction damage matrix page, including while a search replaces the grid with a list.</summary>
     public bool IsDamageSection => Section == CvarSection.FactionDamage;
 
+    /// <summary>True on the weather page, where the day/night calculator is shown.</summary>
+    public bool IsWeatherSection => Section == CvarSection.Weather;
+
     /// <summary>Informational note for the section, or null.</summary>
     public string? Note { get; }
 

@@ -13,11 +13,10 @@ The current version is **0.1.0-dev**, Phase 1: the hosting.cfg editor.
 | Stack | C# / .NET 8, WPF for the UI, xUnit for the core tests |
 | Steam | Not in this build. Steamworks.NET is planned for Phase 3. |
 
-Phase 1 can load and save `hosting.cfg`, edit the CVARs from the reference template (factions 0–15 and the faction damage matrix included), edit the `steam_ugc` Workshop id list, and either comment out or omit unused CVARs.
+Phase 1 can load and save `hosting.cfg`, edit the CVARs from the reference template (factions 0–15 and the faction damage matrix included), edit the `steam_ugc` Workshop id list, and either comment out or omit unused CVARs. The Weather page also calculates `wm_timeScale` and `wm_timeScaleNight` from a desired day and night length.
 
 Not built yet:
 
-- Day/night calculator for `wm_timeScale` and `wm_timeScaleNight` (Phase 2).
 - Workshop upload and update through the logged-in Steam client (Phase 3). No Steam code is in this tree.
 - Installer, screenshots, and issue/pull-request templates (Phase 4).
 
@@ -25,6 +24,7 @@ Not built yet:
 
 - Open a `hosting.cfg`, or start from the commented reference template in `samples/hosting.cfg`.
 - Edit values by section: Core, Logging, Ping, Steam, Weather, Game Rules & Player, AI, Factions, and the faction damage matrix.
+- On Weather, enter a real-time day and night in hours. Apply writes `wm_timeScale` and `wm_timeScaleNight` using the Miscalculator formula. See `docs/day-night-calculator.md`.
 - `http_password` and `sv_servername` are marked required. Passwords and `sv_steamWebAPIKey` are masked.
 - `steam_ugc` is edited as a list of Workshop file ids. Paste a numeric id or a Workshop URL. The file is written as comma-separated ids with no spaces.
 - Unused CVARs can be commented out or left out of the file. Either way the server keeps its stock value.
