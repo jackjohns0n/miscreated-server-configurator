@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Microsoft.Win32;
 
 using MiscreatedServerConfigurator.App.ViewModels;
+using MiscreatedServerConfigurator.Core.Hosting;
 
 namespace MiscreatedServerConfigurator.App;
 
@@ -15,14 +16,17 @@ namespace MiscreatedServerConfigurator.App;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _model;
+    private readonly MainViewModel? _model;
 
     /// <summary>Creates the window and loads the reference template.</summary>
     public MainWindow()
     {
-        InitializeComponent();
+        // The Save button queries CanExecute while InitializeComponent is loading the XAML.
+        // The model has to exist before that, or the query dereferences null and the process
+        // ends before the window is shown.
         _model = new MainViewModel();
         DataContext = _model;
+        InitializeComponent();
     }
 
     private void New_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -32,7 +36,7 @@ public partial class MainWindow : Window
 
     private void New_Executed(object sender, ExecutedRoutedEventArgs e)
     {
-        if (!ConfirmDiscard())
+        if (_model is null || !ConfirmDiscard())
         {
             return;
         }
@@ -47,7 +51,7 @@ public partial class MainWindow : Window
 
     private void Open_Executed(object sender, ExecutedRoutedEventArgs e)
     {
-        if (!ConfirmDiscard())
+        if (_model is null || !ConfirmDiscard())
         {
             return;
         }
@@ -97,11 +101,16 @@ public partial class MainWindow : Window
 
     private void Save_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        e.CanExecute = _model.CanSave;
+        e.CanExecute = EditorCommandGate.CanSave(_model is not null, _model?.CanSave ?? false);
     }
 
     private void Save_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        if (_model is null)
+        {
+            return;
+        }
+
         Save();
     }
 
@@ -112,6 +121,11 @@ public partial class MainWindow : Window
 
     private void SaveAs_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        if (_model is null)
+        {
+            return;
+        }
+
         SaveAs();
     }
 
@@ -144,7 +158,7 @@ public partial class MainWindow : Window
     /// <returns><see langword="true"/> when it is safe to discard the current document.</returns>
     private bool ConfirmDiscard()
     {
-        if (!_model.IsDirty)
+        if (_model is null || !_model.IsDirty)
         {
             return true;
         }
@@ -170,6 +184,11 @@ public partial class MainWindow : Window
 
     private bool Save()
     {
+        if (_model is null)
+        {
+            return false;
+        }
+
         if (string.IsNullOrEmpty(_model.FilePath))
         {
             return SaveAs();
@@ -180,6 +199,11 @@ public partial class MainWindow : Window
 
     private bool SaveAs()
     {
+        if (_model is null)
+        {
+            return false;
+        }
+
         var dialog = new SaveFileDialog
         {
             Filter = "hosting.cfg (*.cfg)|*.cfg|All files (*.*)|*.*",
@@ -197,6 +221,11 @@ public partial class MainWindow : Window
 
     private bool Write(string path)
     {
+        if (_model is null)
+        {
+            return false;
+        }
+
         var text = _model.BuildText();
         try
         {
@@ -219,7 +248,7 @@ public partial class MainWindow : Window
 
     private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
     {
-        if (!ConfirmDiscard())
+        if (_model is not null && !ConfirmDiscard())
         {
             e.Cancel = true;
         }

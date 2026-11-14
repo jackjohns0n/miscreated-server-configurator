@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The window no longer crashes on startup. The Save command was asked whether it could run while the window was still loading, before the editor model existed.
+
 ### Changed
 
+- An unexpected error is written to `%LOCALAPPDATA%\MiscreatedServerConfigurator\error.log` and shown in a dialog. The log is the exception text only, not the open hosting.cfg.
 - Documented that `g_gameRules_faction2_dmg_f2` is intentionally absent. Faction 2 is bases and vehicles: a base cannot damage a base, and vehicle damage is handled elsewhere. The cell stays out of the catalog. Unspecified values use the server's stock value.
 
 ## [0.1.0-dev] - 2026-11-14
