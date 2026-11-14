@@ -83,7 +83,7 @@ internal static class ReferenceNotes
             "RCON password. The template says this and sv_servername are required for a uniquely named server that can be administered over RCON, and that it must not match sv_password. Not listed on the official help page.");
 
         Add(notes, "sv_servername", required: true, note:
-            "Name shown in the server browser. The template says to wrap the name in quotes.");
+            "Name shown in the server browser. Type the name only. The editor writes the surrounding quotes.");
 
         Add(notes, "sv_password", secret: true, note:
             "Join password. The template says players also need this value in user.cfg, and not to set it if the server should stay public. It must not match http_password. Not listed on the official help page.");

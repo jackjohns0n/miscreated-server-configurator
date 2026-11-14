@@ -54,6 +54,11 @@
                 Visibility="{Binding HasTemplateValue, Converter={StaticResource BoolToVis}}" />
       </DockPanel>
 
+      <TextBlock Margin="0,8,0,0"
+                 Style="{StaticResource MutedText}"
+                 Text="{Binding FieldHint}"
+                 Visibility="{Binding FieldHint, Converter={StaticResource StringToVis}}" />
+
       <Grid Margin="0,8,0,0">
         <Grid.Style>
           <Style TargetType="Grid">

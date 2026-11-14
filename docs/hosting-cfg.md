@@ -26,7 +26,7 @@ key=value
 
 Do not put a comment after the value. The template's own header says a trailing comment breaks server parsing. When this editor turns a commented CVAR into a live line, it writes `key=value` only.
 
-Quoted values keep their quotes, because the template stores them as part of the value (`sv_servername=""`). A value cannot contain a line break; the editor strips any newline you paste.
+A value cannot contain a line break; the editor strips any newline you paste. For `sv_servername`, type the name only. The editor writes the quotes (`sv_servername="My Server"`). The `""` in the reference template is not an example name. It only shows where the quotes go. Other template values that are empty, or only a pair of quotes, are not offered as a reference value.
 
 Comments that are not CVAR lines, and any CVAR you have not changed, are written back as they were. A key that is in your file but not in the catalog is kept under **Other keys in this file** so a save does not drop it. `schedule_shutdown_utc` is one of those: it is not in the reference template, so it is not offered as a catalog CVAR, and it is preserved if your file already has it.
 
@@ -48,7 +48,7 @@ The template says two settings are required for a uniquely named server that can
 | Key | Role |
 | --- | --- |
 | `http_password` | RCON password. Do not use the same value as `sv_password`. Not listed on the official help page. |
-| `sv_servername` | Name in the server browser. Wrap it in quotes. |
+| `sv_servername` | Name in the server browser. Type the name. The editor adds the quotes. |
 
 The editor warns, and still lets you save, when the RCON password is missing or still `CHANGE_ME`, when the server name is empty, or when the two passwords match. The warning does not repeat a password you typed.
 

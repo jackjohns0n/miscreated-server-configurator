@@ -34,7 +34,7 @@ public sealed class CvarRowViewModel : ObservableObject
         Definition = definition;
         Key = state.Key;
         _enabled = state.Enabled;
-        _value = state.Value;
+        _value = Key == ServerNameValue.Key ? ServerNameValue.ToPlain(state.Value) : state.Value;
         _isSteamUgc = definition?.Kind == CvarEditorKind.SteamUgc;
         WorkshopIds = new ObservableCollection<string>();
         if (_isSteamUgc)
@@ -80,24 +80,19 @@ public sealed class CvarRowViewModel : ObservableObject
     /// <summary>True when this row edits <c>steam_ugc</c> as a list of Workshop ids.</summary>
     public bool IsSteamUgc => _isSteamUgc;
 
-    /// <summary>True when the reference template recorded a value for this key.</summary>
-    public bool HasTemplateValue => Definition?.TemplateValue is not null;
+    /// <summary>True when the reference template recorded a value worth copying into the field.</summary>
+    public bool HasTemplateValue => TemplateValuePolicy.IsReference(Definition?.TemplateValue);
 
     /// <summary>Label for the reference-template value, or empty when there is none.</summary>
-    public string TemplateValueLabel
-    {
-        get
-        {
-            if (Definition?.TemplateValue is null)
-            {
-                return string.Empty;
-            }
+    public string TemplateValueLabel =>
+        HasTemplateValue ? "Reference template: " + Definition!.TemplateValue : string.Empty;
 
-            return Definition.TemplateValue.Length == 0
-                ? "Reference template: (empty)"
-                : "Reference template: " + Definition.TemplateValue;
-        }
-    }
+    /// <summary>
+    /// Extra hint for the value field. Set for <c>sv_servername</c>, where the field is the plain name.
+    /// </summary>
+    public string? FieldHint => Key == ServerNameValue.Key
+        ? "Your server name goes between the quotes; the app adds them."
+        : null;
 
     /// <summary>True when the row matches the current search, or when there is no search.</summary>
     public bool IsVisible
@@ -135,12 +130,18 @@ public sealed class CvarRowViewModel : ObservableObject
             var cleaned = (value ?? string.Empty)
                 .Replace("\r", string.Empty, StringComparison.Ordinal)
                 .Replace("\n", string.Empty, StringComparison.Ordinal);
+            if (Key == ServerNameValue.Key)
+            {
+                cleaned = ServerNameValue.ToPlain(cleaned);
+            }
+
             if (!SetProperty(ref _value, cleaned))
             {
                 return;
             }
 
-            _session.SetValue(Key, cleaned);
+            var fileValue = Key == ServerNameValue.Key ? ServerNameValue.ToFile(cleaned) : cleaned;
+            _session.SetValue(Key, fileValue);
             if (_isSteamUgc && !_fromList)
             {
                 ReloadWorkshopIds();
@@ -203,7 +204,7 @@ public sealed class CvarRowViewModel : ObservableObject
 
     private void UseTemplateValue()
     {
-        if (Definition?.TemplateValue is null)
+        if (!HasTemplateValue || Definition?.TemplateValue is null)
         {
             return;
         }
