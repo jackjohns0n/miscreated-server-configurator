@@ -58,10 +58,11 @@ public static class FactionDamageKey
     }
 
     /// <summary>
-    /// Short label for a faction id, using the words in the template's matrix header.
+    /// Short label for a faction id. Factions 0–2 use the known meanings from the template header.
+    /// Factions 3–15 are numbered only. They have no built-in role name.
     /// </summary>
     /// <param name="faction">A faction id from 0 through 15.</param>
-    /// <returns>A label such as "0 Players" or "3 Admin".</returns>
+    /// <returns>A label such as "0 Players" or "Faction 3".</returns>
     public static string Label(int faction)
     {
         EnsureFaction(faction, nameof(faction));
@@ -70,7 +71,7 @@ public static class FactionDamageKey
             0 => "0 Players",
             1 => "1 AI",
             2 => "2 Bases",
-            _ => string.Create(CultureInfo.InvariantCulture, $"{faction} Admin"),
+            _ => string.Create(CultureInfo.InvariantCulture, $"Faction {faction}"),
         };
     }
 

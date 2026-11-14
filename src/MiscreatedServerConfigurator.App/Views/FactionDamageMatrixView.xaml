@@ -8,8 +8,8 @@
               Height="36"
               Margin="1"
               Padding="3,2"
-              Background="White"
-              BorderBrush="{StaticResource Brush.Line}"
+              Background="{DynamicResource Brush.Field}"
+              BorderBrush="{DynamicResource Brush.Line}"
               BorderThickness="1"
               CornerRadius="3"
               ToolTip="{Binding ToolTip}">
@@ -17,7 +17,7 @@
           <CheckBox IsChecked="{Binding Row.Enabled, Mode=TwoWay}"
                     VerticalAlignment="Center"
                     Margin="0,0,4,0"
-                    ToolTip="Write this multiplier. Unchecked uses the factory default." />
+                    ToolTip="Write this multiplier. Unchecked uses the server's stock value." />
           <TextBox Text="{Binding Row.Value, UpdateSourceTrigger=PropertyChanged}"
                    Width="40"
                    Padding="2,1"
@@ -25,7 +25,10 @@
                    FontSize="12"
                    VerticalAlignment="Center"
                    SpellCheck.IsEnabled="False"
-                   BorderBrush="{StaticResource Brush.Line}" />
+                   Background="{DynamicResource Brush.Field}"
+                   Foreground="{DynamicResource Brush.Ink}"
+                   CaretBrush="{DynamicResource Brush.Ink}"
+                   BorderBrush="{DynamicResource Brush.Line}" />
         </StackPanel>
       </Border>
     </DataTemplate>
@@ -33,15 +36,15 @@
       <Border Width="76"
               Height="36"
               Margin="1"
-              Background="#F7F9FB"
-              BorderBrush="{StaticResource Brush.Line}"
+              Background="{DynamicResource Brush.NavHover}"
+              BorderBrush="{DynamicResource Brush.Line}"
               BorderThickness="1"
               CornerRadius="3"
               ToolTip="{Binding ToolTip}">
         <TextBlock Text="—"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   Foreground="{StaticResource Brush.Muted}" />
+                   Foreground="{DynamicResource Brush.Muted}" />
       </Border>
     </DataTemplate>
     <views:DamageCellTemplateSelector x:Key="CellSelector"
@@ -49,11 +52,7 @@
                                       Missing="{StaticResource MissingCell}" />
   </UserControl.Resources>
 
-  <StackPanel>
-    <TextBlock Style="{StaticResource MutedText}"
-               Margin="0,0,0,8"
-               Text="Each row is the faction dealing damage. Each column is the faction taking it. An unchecked cell is not written, so the server keeps its factory default." />
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <StackPanel>
         <StackPanel Orientation="Horizontal" Margin="128,0,0,4">
           <ItemsControl ItemsSource="{Binding ColumnHeaders}">
@@ -69,7 +68,7 @@
                            TextAlignment="Center"
                            TextWrapping="Wrap"
                            FontSize="11"
-                           Foreground="{StaticResource Brush.Muted}" />
+                           Foreground="{DynamicResource Brush.Muted}" />
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
@@ -96,5 +95,4 @@
         </ItemsControl>
       </StackPanel>
     </ScrollViewer>
-  </StackPanel>
 </UserControl>

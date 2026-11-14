@@ -5,6 +5,29 @@ using MiscreatedServerConfigurator.Core.Catalog;
 namespace MiscreatedServerConfigurator.App.ViewModels;
 
 /// <summary>
+/// One choice in the theme setting.
+/// </summary>
+public sealed class ThemeOption
+{
+    /// <summary>
+    /// Creates an option.
+    /// </summary>
+    /// <param name="value">The stored theme.</param>
+    /// <param name="label">Text shown in the combo box.</param>
+    public ThemeOption(Core.Theming.ThemePreference value, string label)
+    {
+        Value = value;
+        Label = label;
+    }
+
+    /// <summary>The stored theme.</summary>
+    public Core.Theming.ThemePreference Value { get; }
+
+    /// <summary>Text shown in the combo box.</summary>
+    public string Label { get; }
+}
+
+/// <summary>
 /// One choice in the "unused CVAR" setting.
 /// </summary>
 public sealed class UnusedOutputOption
@@ -242,6 +265,9 @@ public sealed class SectionViewModel : ObservableObject
 
     /// <summary>Navigation title.</summary>
     public string Title { get; }
+
+    /// <summary>True on the faction damage matrix page, including while a search replaces the grid with a list.</summary>
+    public bool IsDamageSection => Section == CvarSection.FactionDamage;
 
     /// <summary>Informational note for the section, or null.</summary>
     public string? Note { get; }

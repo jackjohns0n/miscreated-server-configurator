@@ -64,7 +64,7 @@ internal static class ReferenceNotes
             + "This catalog follows the reference template: enable keys for 3 through 15; names, equipment, and spawn positions for 0 and 3 through 15; "
             + "and Steam id lists for 3 through 15. Factions 0, 1, and 2 have no enable line in the template.",
         [CvarSection.FactionDamage] =
-            "Labels follow the template header: f0 players, f1 AI, f2 bases and vehicles, f3 through f15 admin factions. "
+            "Labels: f0 players, f1 AI, f2 bases and vehicles, and Faction 3 through Faction 15. Factions 3 through 15 have no built-in role. "
             + "Official help instead describes built-in factions as 0 unaffiliated players, 1 environment, and 2 bases. "
             + "g_gameRules_faction2_dmg_f2 is intentionally absent: faction 2 is bases and vehicles, a base cannot damage a base, and vehicle damage is handled elsewhere. Unspecified values use the server's stock value. "
             + "The template header says 1.0 is normal damage, 2.0 is double damage, and 0 is no damage.",

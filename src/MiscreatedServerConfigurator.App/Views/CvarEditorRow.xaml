@@ -9,7 +9,7 @@
                   VerticalAlignment="Center"
                   Content="Use this value"
                   ToolTip="Unchecked CVARs are not written as live settings. The server uses its factory default." />
-        <Border DockPanel.Dock="Left" Background="{StaticResource Brush.DangerBg}">
+        <Border DockPanel.Dock="Left" Background="{DynamicResource Brush.DangerBg}">
           <Border.Style>
             <Style TargetType="Border" BasedOn="{StaticResource Badge}">
               <Setter Property="Visibility" Value="Collapsed" />
@@ -20,7 +20,7 @@
               </Style.Triggers>
             </Style>
           </Border.Style>
-          <TextBlock Text="Required" Foreground="{StaticResource Brush.DangerInk}" FontSize="11" />
+          <TextBlock Text="Required" Foreground="{DynamicResource Brush.DangerInk}" FontSize="11" />
         </Border>
       </DockPanel>
 
@@ -32,12 +32,12 @@
 
       <Border Margin="0,8,0,0"
               Padding="10,8"
-              Background="{StaticResource Brush.InfoBg}"
-              BorderBrush="{StaticResource Brush.Line}"
+              Background="{DynamicResource Brush.InfoBg}"
+              BorderBrush="{DynamicResource Brush.Line}"
               BorderThickness="1"
               CornerRadius="4"
               Visibility="{Binding InformationalNote, Converter={StaticResource StringToVis}}">
-        <TextBlock Text="{Binding InformationalNote}" TextWrapping="Wrap" Foreground="{StaticResource Brush.InfoInk}" />
+        <TextBlock Text="{Binding InformationalNote}" TextWrapping="Wrap" Foreground="{DynamicResource Brush.InfoInk}" />
       </Border>
 
       <DockPanel Margin="0,8,0,0" LastChildFill="False">
@@ -93,7 +93,7 @@
                      FontSize="13"
                      Padding="8,6"
                      MinHeight="32"
-                     BorderBrush="{StaticResource Brush.Line}"
+                     BorderBrush="{DynamicResource Brush.Line}"
                      PasswordChanged="SecretBox_OnPasswordChanged">
           <PasswordBox.Style>
             <Style TargetType="PasswordBox">
@@ -169,7 +169,7 @@
                    ToolTip="A numeric Workshop file id, a Workshop URL, or several separated by commas." />
         </DockPanel>
         <TextBlock Margin="0,6,0,0"
-                   Foreground="{StaticResource Brush.DangerInk}"
+                   Foreground="{DynamicResource Brush.DangerInk}"
                    Text="{Binding WorkshopError}"
                    TextWrapping="Wrap"
                    Visibility="{Binding WorkshopError, Converter={StaticResource StringToVis}}" />

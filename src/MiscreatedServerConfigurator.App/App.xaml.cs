@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
+using MiscreatedServerConfigurator.App.Theming;
 using MiscreatedServerConfigurator.Core.Hosting;
 
 namespace MiscreatedServerConfigurator.App;
@@ -22,6 +23,25 @@ public partial class App : Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+    }
+
+    /// <summary>Paints the saved theme, then opens the editor. Follow system is the default.</summary>
+    /// <param name="e">Startup arguments. Unused.</param>
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        ThemeController.Initialize();
+        var window = new MainWindow();
+        MainWindow = window;
+        window.Show();
+    }
+
+    /// <summary>Stops the Windows theme listener.</summary>
+    /// <param name="e">Exit arguments.</param>
+    protected override void OnExit(ExitEventArgs e)
+    {
+        ThemeController.Shutdown();
+        base.OnExit(e);
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

@@ -27,7 +27,8 @@ Not built yet:
 - Edit values by section: Core, Logging, Ping, Steam, Weather, Game Rules & Player, AI, Factions, and the faction damage matrix.
 - `http_password` and `sv_servername` are marked required. Passwords and `sv_steamWebAPIKey` are masked.
 - `steam_ugc` is edited as a list of Workshop file ids. Paste a numeric id or a Workshop URL. The file is written as comma-separated ids with no spaces.
-- Unused CVARs can be commented out or left out of the file. Either way the server keeps its factory default.
+- Unused CVARs can be commented out or left out of the file. Either way the server keeps its stock value.
+- Theme: Dark, Light, or Follow system (the default). Follow system switches when the Windows app theme changes. The choice is saved under `%LOCALAPPDATA%\MiscreatedServerConfigurator\theme.txt`.
 - Comments and line order are kept when a setting has not changed. A live line the editor rewrites is `key=value` with no trailing comment.
 - Keys that are in the open file but not in the catalog are kept, so a save does not drop them.
 

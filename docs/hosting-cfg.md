@@ -88,15 +88,15 @@ Spawn positions are `X,Y,Z`. Z is height relative to the ground; use 0 if player
 
 ## Faction damage matrix
 
-The template header is the labeling this editor uses:
+The matrix labels are:
 
 - f0 players
 - f1 AI
 - f2 bases and vehicles
-- f3–f15 admin factions
+- Faction 3 through Faction 15, with no built-in role
 - 1.0 normal damage, 2.0 double damage, 0 no damage
 
-Official help describes built-in factions differently (0 unaffiliated players, 1 environment, 2 bases). The template wins for the labels on screen. The note on that page records the disagreement.
+Factions 3–15 have no built-in role. A server owner may use a custom faction for anything, including an admin group. That is their choice, not a name this editor assigns. Official help describes built-in factions differently (0 unaffiliated players, 1 environment, 2 bases). The template's meanings for 0, 1, and 2 are the ones shown here. The note on that page records the disagreement.
 
 Each row is the faction dealing damage. Each column is the faction taking it. A cell is one CVAR, `g_gameRules_factionX_dmg_fY`. Uncheck a cell to leave it unused. The template comments `1` on every cell it contains. Those lines have no per-cell description beyond the header.
 

@@ -2,8 +2,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
 
+using MiscreatedServerConfigurator.App.Theming;
 using MiscreatedServerConfigurator.Core.Catalog;
 using MiscreatedServerConfigurator.Core.Hosting;
+using MiscreatedServerConfigurator.Core.Theming;
 
 namespace MiscreatedServerConfigurator.App.ViewModels;
 
@@ -16,6 +18,7 @@ public sealed class MainViewModel : ObservableObject
     private string _loadedText;
     private string? _filePath;
     private UnusedCvarOutput _unusedOutput = UnusedCvarOutput.CommentOut;
+    private ThemePreference _theme = ThemeController.Preference;
     private string _searchText = string.Empty;
     private SectionViewModel? _selectedSection;
     private bool _isDirty;
@@ -30,6 +33,12 @@ public sealed class MainViewModel : ObservableObject
         {
             new UnusedOutputOption(UnusedCvarOutput.CommentOut, "Comment them out"),
             new UnusedOutputOption(UnusedCvarOutput.Omit, "Omit them"),
+        };
+        ThemeOptions = new[]
+        {
+            new ThemeOption(ThemePreference.FollowSystem, "Follow system"),
+            new ThemeOption(ThemePreference.Light, "Light"),
+            new ThemeOption(ThemePreference.Dark, "Dark"),
         };
         Sections = new ObservableCollection<SectionViewModel>();
         Warnings = new ObservableCollection<ConfigWarning>();
@@ -46,6 +55,24 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>The two ways to write an unused CVAR.</summary>
     public IReadOnlyList<UnusedOutputOption> UnusedOptions { get; }
+
+    /// <summary>Dark, light, or follow the Windows app theme.</summary>
+    public IReadOnlyList<ThemeOption> ThemeOptions { get; }
+
+    /// <summary>The saved appearance. Follow system is the default.</summary>
+    public ThemePreference Theme
+    {
+        get => _theme;
+        set
+        {
+            if (!SetProperty(ref _theme, value))
+            {
+                return;
+            }
+
+            ThemeController.SetPreference(value);
+        }
+    }
 
     /// <summary>The section currently on screen.</summary>
     public SectionViewModel? SelectedSection

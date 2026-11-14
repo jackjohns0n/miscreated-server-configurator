@@ -182,7 +182,9 @@ public sealed class CvarCatalogTests
         Assert.Equal("0 Players", FactionDamageKey.Label(0));
         Assert.Equal("1 AI", FactionDamageKey.Label(1));
         Assert.Equal("2 Bases", FactionDamageKey.Label(2));
-        Assert.Equal("15 Admin", FactionDamageKey.Label(15));
+        Assert.Equal("Faction 15", FactionDamageKey.Label(15));
+        Assert.Equal("Faction 3", FactionDamageKey.Label(3));
+        Assert.DoesNotContain("admin", damage, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string[] KeysIn(string blockTitle)
