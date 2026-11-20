@@ -35,9 +35,14 @@ public sealed class ServerSetupViewModel : ObservableObject
     private bool _grantAllGuides;
     private string _beta = string.Empty;
     private string _betaPassword = string.Empty;
+    private readonly List<string> _logLines = new();
+    private bool _progressOpen;
+    private DateTime _stdoutProgressAt = DateTime.MinValue;
     private string _log = string.Empty;
     private string? _message;
     private bool _busy;
+    private double _downloadPercent;
+    private bool _showDownloadProgress;
 
     /// <summary>Creates the setup model and loads the saved root and servers.</summary>
     /// <param name="editor">The hosting.cfg editor. Its current text is the only cfg that gets written.</param>
@@ -200,11 +205,25 @@ public sealed class ServerSetupViewModel : ObservableObject
         set => SetProperty(ref _betaPassword, value);
     }
 
-    /// <summary>SteamCMD and setup output.</summary>
+    /// <summary>SteamCMD and setup output. The binding is one-way because this has no public setter.</summary>
     public string Log
     {
         get => _log;
         private set => SetProperty(ref _log, value);
+    }
+
+    /// <summary>Latest SteamCMD download percentage, from 0 through 100.</summary>
+    public double DownloadPercent
+    {
+        get => _downloadPercent;
+        private set => SetProperty(ref _downloadPercent, value);
+    }
+
+    /// <summary>True while a download percentage is known.</summary>
+    public bool ShowDownloadProgress
+    {
+        get => _showDownloadProgress;
+        private set => SetProperty(ref _showDownloadProgress, value);
     }
 
     /// <summary>A validation or status sentence for this window.</summary>
@@ -450,10 +469,16 @@ public sealed class ServerSetupViewModel : ObservableObject
 
             if (!ServerLayout.DedicatedExecutableExists(serverDirectory))
             {
-                Message = "Bin64_dedicated\\MiscreatedServer.exe was not found. SteamCMD exit code "
+                var failure = "Server install failed. Bin64_dedicated\\MiscreatedServer.exe was not found. SteamCMD exit code "
                     + code.ToString(CultureInfo.InvariantCulture) + ".";
+                AppendLog(failure);
+                Message = failure;
                 return;
             }
+
+            DownloadPercent = 100;
+            ShowDownloadProgress = true;
+            AppendLog("Server install finished. Bin64_dedicated\\MiscreatedServer.exe is present.");
 
             Remember(settings);
             Message = "The dedicated server files are in " + serverDirectory + ". The app did not start the server.";
@@ -559,7 +584,7 @@ public sealed class ServerSetupViewModel : ObservableObject
                 AppendLog("Running " + runtime.DisplayName + " " + runtime.SilentArguments);
                 var code = await _processes.RunAsync(
                     new ProcessRequest(installer, runtime.SilentArguments, cache, Elevate: true),
-                    onLine: null,
+                    onChunk: null,
                     CancellationToken.None).ConfigureAwait(true);
                 AppendLog(runtime.DisplayName + " exited with code " + code.ToString(CultureInfo.InvariantCulture) + ".");
             }
@@ -704,10 +729,90 @@ public sealed class ServerSetupViewModel : ObservableObject
 
     private async Task<int> RunSteamCmdAsync(string steamCmd, string arguments)
     {
-        return await _processes.RunAsync(
-            new ProcessRequest(steamCmd, arguments, Path.GetDirectoryName(steamCmd)!, Elevate: false),
-            AppendLog,
-            CancellationToken.None).ConfigureAwait(true);
+        var reader = new SteamCmdConsoleReader();
+        var directory = Path.GetDirectoryName(steamCmd)!;
+        var tail = new ContentLogTail(Path.Combine(directory, "logs", "content_log.txt"));
+        using var stop = new CancellationTokenSource();
+        var poll = PollContentLogAsync(tail, stop.Token);
+        try
+        {
+            var code = await _processes.RunAsync(
+                new ProcessRequest(steamCmd, arguments, directory, Elevate: false),
+                chunk =>
+                {
+                    foreach (var piece in reader.Push(chunk))
+                    {
+                        if (piece.ReplaceProgress || piece.Percent is not null)
+                        {
+                            _stdoutProgressAt = DateTime.UtcNow;
+                        }
+
+                        Publish(piece);
+                    }
+                },
+                CancellationToken.None).ConfigureAwait(true);
+            foreach (var piece in reader.Flush())
+            {
+                Publish(piece);
+            }
+
+            return code;
+        }
+        finally
+        {
+            stop.Cancel();
+            try
+            {
+                await poll.ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                // The poll loop ends when the process does.
+            }
+        }
+    }
+
+    private async Task PollContentLogAsync(ContentLogTail tail, CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                foreach (var line in tail.ReadNewLines())
+                {
+                    PublishContentLog(line);
+                }
+            }
+            catch (IOException)
+            {
+                // SteamCMD may be rewriting the log. The next poll tries again.
+            }
+
+            try
+            {
+                await Task.Delay(500, cancellationToken).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+    }
+
+    private void PublishContentLog(string line)
+    {
+        var hasPercent = SteamCmdProgress.TryGetPercent(line, out var percent);
+        if (!hasPercent && !SteamCmdProgress.IsStateLine(line))
+        {
+            return;
+        }
+
+        if (hasPercent && DateTime.UtcNow - _stdoutProgressAt < TimeSpan.FromSeconds(2))
+        {
+            return;
+        }
+
+        Publish(new SteamCmdPiece(hasPercent, line.Trim(), hasPercent ? percent : null));
     }
 
     private bool TryPaths(out string root, out string serverDirectory, out LaunchSettings settings)
@@ -886,13 +991,42 @@ public sealed class ServerSetupViewModel : ObservableObject
 
     private void AppendLog(string line)
     {
+        Publish(new SteamCmdPiece(false, line, null));
+    }
+
+    private void Publish(SteamCmdPiece piece)
+    {
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher is not null && !dispatcher.CheckAccess())
         {
-            dispatcher.Invoke(() => AppendLog(line));
+            dispatcher.Invoke(() => Publish(piece));
             return;
         }
 
-        Log = string.IsNullOrEmpty(Log) ? line : Log + Environment.NewLine + line;
+        if (piece.ReplaceProgress)
+        {
+            if (_progressOpen && _logLines.Count > 0)
+            {
+                _logLines[^1] = piece.Text;
+            }
+            else
+            {
+                _logLines.Add(piece.Text);
+                _progressOpen = true;
+            }
+        }
+        else
+        {
+            _progressOpen = false;
+            _logLines.Add(piece.Text);
+        }
+
+        if (piece.Percent is double percent)
+        {
+            DownloadPercent = percent;
+            ShowDownloadProgress = true;
+        }
+
+        Log = string.Join(Environment.NewLine, _logLines);
     }
 }

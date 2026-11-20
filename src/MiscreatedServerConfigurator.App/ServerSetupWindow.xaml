@@ -20,8 +20,18 @@
     <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="12">
       <DockPanel>
         <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Margin="0,0,0,6" Text="Output" />
+        <ProgressBar Height="8"
+                     Margin="0,0,0,8"
+                     Minimum="0"
+                     Maximum="100"
+                     Foreground="{DynamicResource Brush.Accent}"
+                     Background="{DynamicResource Brush.Field}"
+                     Value="{Binding DownloadPercent, Mode=OneWay}"
+                     Visibility="{Binding ShowDownloadProgress, Converter={StaticResource BoolToVis}}" />
         <!-- TextBox.Text binds TwoWay unless Mode says otherwise. IsReadOnly does not change that, and Log has no public setter. -->
-        <TextBox MinHeight="140"
+        <TextBox x:Name="OutputLog"
+                 MinHeight="140"
+                 TextChanged="OutputLog_TextChanged"
                  IsReadOnly="True"
                  Style="{StaticResource InputBox}"
                  Text="{Binding Log, Mode=OneWay}"

@@ -7,15 +7,18 @@ namespace MiscreatedServerConfigurator.Core.Setup;
 /// <param name="Elevate">When true, the Windows host shows a UAC prompt. Output cannot be captured.</param>
 public readonly record struct ProcessRequest(string FileName, string Arguments, string WorkingDirectory, bool Elevate);
 
-/// <summary>Runs a process and reports each output line. The Windows implementation lives in the app project.</summary>
+/// <summary>Runs a process and reports raw stdout and stderr chunks. The Windows implementation lives in the app project.</summary>
 public interface IProcessRunner
 {
     /// <summary>Starts the process and waits for it to exit.</summary>
     /// <param name="request">What to run.</param>
-    /// <param name="onLine">Called for each stdout or stderr line. Null skips capture. Not called when <see cref="ProcessRequest.Elevate"/> is true.</param>
+    /// <param name="onChunk">
+    /// Called with each chunk of stdout or stderr, including carriage returns. Null skips capture.
+    /// Not called when <see cref="ProcessRequest.Elevate"/> is true. Chunks are not split into lines.
+    /// </param>
     /// <param name="cancellationToken">Cancels the wait. The process is killed when the token fires.</param>
     /// <returns>The exit code. A declined UAC prompt throws <see cref="SetupCanceledException"/>.</returns>
-    Task<int> RunAsync(ProcessRequest request, Action<string>? onLine, CancellationToken cancellationToken);
+    Task<int> RunAsync(ProcessRequest request, Action<string>? onChunk, CancellationToken cancellationToken);
 }
 
 /// <summary>Downloads one file. Used for SteamCMD and the Visual C++ installers.</summary>

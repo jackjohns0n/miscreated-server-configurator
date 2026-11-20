@@ -21,6 +21,7 @@ public sealed class XamlBindingSetterTests
         "ListBox.SelectedItem",
         "ListBox.SelectedValue",
         "Slider.Value",
+        "ProgressBar.Value",
     };
 
     [Fact]

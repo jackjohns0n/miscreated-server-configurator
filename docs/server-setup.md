@@ -35,7 +35,7 @@ The server root, the SteamCMD folder, and the known servers are stored together 
 +force_install_dir <server> +login anonymous +app_update 302200 [-beta <name> -betapassword <password>] validate +quit
 ```
 
-If that exits with an error, it runs the same command once more. It then checks that `Bin64_dedicated\MiscreatedServer.exe` exists. Beta branch and password are the fields on this window. There is no `beta.ini`.
+If that exits with an error, it runs the same command once more. Download progress is shown while it runs: SteamCMD rewrites one line with carriage returns, and the output box replaces that line and fills a percentage. If the console stays quiet because output is redirected, the window follows new lines in `steamcmd\logs\content_log.txt`. It then checks that `Bin64_dedicated\MiscreatedServer.exe` exists and writes a success or failure line. Beta branch and password are the fields on this window. There is no `beta.ini`.
 
 **Download mods** reads `steam_ugc` from the hosting.cfg currently open in the editor. Only numeric ids are used. Each id is downloaded with:
 

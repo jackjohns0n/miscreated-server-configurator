@@ -42,6 +42,14 @@ public partial class ServerSetupWindow : Window
         return dialog.ShowDialog(this) == true ? dialog.FolderName : null;
     }
 
+    private void OutputLog_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.TextBox box)
+        {
+            box.ScrollToEnd();
+        }
+    }
+
     private void BrowseRoot_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFolderDialog
