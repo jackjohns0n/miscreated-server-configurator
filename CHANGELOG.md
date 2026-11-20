@@ -9,14 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Server download and setup (Windows). Server → Download and setup installs SteamCMD once under a root you choose, installs dedicated server app 302200, copies Workshop items from the editor's `steam_ugc`, checks the Visual C++ 2012, 2013, and 2015 or later x64 runtimes, and can add inbound firewall rules. It writes `StartServer.bat` and does not start the server. Grant-all-guides is a SQLite trigger on `miscreated.db`. See `docs/server-setup.md`. Spafbi's unlicensed setup scripts were a behavior checklist only and were not copied.
 - Day/night calculator on the Weather page. Desired real hours become `wm_timeScale` and `wm_timeScaleNight` with the formula from [Miscalculator](https://github.com/jackjohns0n/Day_Night_Calculator) (`main.js` lines 77–83). Those two CVARs are edited only in the panel, including each one's on/off toggle, and either side updates the other. The panel explains the formula. See `docs/day-night-calculator.md`.
 
 ### Changed
 
+- SteamCMD is an app-wide folder, chosen once and stored as `steamCmdPath` in `%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json`. It is not installed under the server root. Server installs, Workshop downloads, and `StartServer.bat` all use that path. An older `<root>\steamcmd` install can be selected in place; files are not moved. `steamcmd.zip` is deleted after a successful extract.
 - Theme setting: Dark, Light, or Follow system. Follow system is the default and updates when the Windows app theme changes. The choice is saved for the next launch.
 
 ### Fixed
 
+- Write hosting.cfg always logs what it did. It copies the editor's current document, including an unsaved new one, into an installed server folder. If the editor is empty or `Bin64_dedicated\MiscreatedServer.exe` is missing, the Output box says why and no file or folder is created.
+- Write start script and Write hosting.cfg refuse a folder that is not an installed server, and they do not add a new saved server. Install server is what records a server.
+- Install server shows SteamCMD download progress while it runs. Carriage-return updates replace the current progress line and fill a percentage bar. If the console stays quiet, the window follows `steamcmd\logs\content_log.txt`. The output ends with a line saying whether `MiscreatedServer.exe` is present.
+- Server → Download and setup no longer crashes while the window opens. The output box was bound two-way to the read-only log, which WPF rejects even when the box is marked read-only.
 - Clearing or invalidating a day or night length no longer leaves the previous `wm_timeScale` and `wm_timeScaleNight` numbers on screen. The pending scales clear, the line under the boxes says what is missing, and Apply stays off. The file is unchanged until Apply, and the saved values stay on their own line. The same rules apply when a scale box is cleared.
 - Page titles, group headings, and monospace CVAR names use the theme text color. Those styles had been replacing the themed text style and falling back to black.
 - Body text is 15pt. Page titles are 24pt and group headings 18pt, both semibold.

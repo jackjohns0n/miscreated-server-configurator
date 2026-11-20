@@ -1,0 +1,157 @@
+<Window x:Class="MiscreatedServerConfigurator.App.ServerSetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Server download and setup"
+        Width="980"
+        Height="820"
+        MinWidth="760"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.Window}">
+  <DockPanel Margin="16">
+    <TextBlock DockPanel.Dock="Top"
+               Style="{StaticResource SectionTitle}"
+               Text="Server download and setup" />
+    <TextBlock DockPanel.Dock="Top"
+               Style="{StaticResource MutedText}"
+               Margin="0,0,0,12"
+               Text="Downloads a dedicated server into a folder you choose and writes StartServer.bat. SteamCMD is a separate app folder. This window does not start the server." />
+
+    <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="12">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Margin="0,0,0,6" Text="Output" />
+        <ProgressBar Height="8"
+                     Margin="0,0,0,8"
+                     Minimum="0"
+                     Maximum="100"
+                     Foreground="{DynamicResource Brush.Accent}"
+                     Background="{DynamicResource Brush.Field}"
+                     Value="{Binding DownloadPercent, Mode=OneWay}"
+                     Visibility="{Binding ShowDownloadProgress, Converter={StaticResource BoolToVis}}" />
+        <!-- TextBox.Text binds TwoWay unless Mode says otherwise. IsReadOnly does not change that, and Log has no public setter. -->
+        <TextBox x:Name="OutputLog"
+                 MinHeight="140"
+                 TextChanged="OutputLog_TextChanged"
+                 IsReadOnly="True"
+                 Style="{StaticResource InputBox}"
+                 Text="{Binding Log, Mode=OneWay}"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto" />
+      </DockPanel>
+    </Border>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <TextBlock Foreground="{DynamicResource Brush.WarnInk}"
+                   Text="{Binding Message}"
+                   TextWrapping="Wrap"
+                   Visibility="{Binding Message, Converter={StaticResource StringToVis}}" />
+
+        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Server root" />
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Right"
+                  Margin="8,0,0,0"
+                  Content="Browse"
+                  Style="{StaticResource ToolbarButton}"
+                  Click="BrowseRoot_Click" />
+          <Button DockPanel.Dock="Right"
+                  Content="Save root"
+                  Style="{StaticResource ToolbarButton}"
+                  Command="{Binding SaveRootCommand}" />
+          <TextBox MinHeight="32"
+                   Style="{StaticResource InputBox}"
+                   ToolTip="A folder such as D:\MiscreatedServers. Each server is a subfolder. This is not filled in for you, and it is not where SteamCMD is installed."
+                   Text="{Binding RootPath, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+
+        <TextBlock Margin="0,8,0,4" FontWeight="SemiBold" Text="SteamCMD" />
+        <TextBlock Style="{StaticResource MutedText}"
+                   Margin="0,0,0,4"
+                   Text="App-wide folder for steamcmd.exe. Not inside the server root. Used for server installs, Workshop downloads, and the start script." />
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Right"
+                  Margin="8,0,0,0"
+                  Content="Browse"
+                  Style="{StaticResource ToolbarButton}"
+                  Click="BrowseSteamCmd_Click" />
+          <TextBox MinHeight="32"
+                   Style="{StaticResource InputBox}"
+                   ToolTip="Choose this once. The app does not pick Documents or Program Files. If an older install is under the server root, you can point here instead of moving it."
+                   Text="{Binding SteamCmdPath, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+
+        <TextBlock Margin="0,8,0,4" FontWeight="SemiBold" Text="Known servers" />
+        <ListBox MaxHeight="120"
+                 Margin="0,0,0,8"
+                 ItemsSource="{Binding KnownServers}"
+                 DisplayMemberPath="Name"
+                 MouseDoubleClick="KnownServer_DoubleClick" />
+
+        <TextBlock Margin="0,8,0,4" FontWeight="SemiBold" Text="Server folder name" />
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Right"
+                  Margin="8,0,0,0"
+                  Content="Load server"
+                  Style="{StaticResource ToolbarButton}"
+                  Click="LoadServer_Click" />
+          <TextBox MinHeight="32"
+                   Style="{StaticResource InputBox}"
+                   ToolTip="Folder created under the root. Letters, digits, spaces, underscores, or hyphens."
+                   Text="{Binding ServerName, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+
+        <TextBlock Style="{StaticResource BlockTitle}" Text="Launch settings" />
+        <TextBlock Style="{StaticResource MutedText}"
+                   Margin="0,0,0,8"
+                   Text="These go in StartServer.bat only. hosting.cfg still comes from the editor." />
+
+        <UniformGrid Columns="2" Margin="0,0,0,8">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Margin="0,0,0,4" Text="Map" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding Map, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding MapTip}" />
+          </StackPanel>
+          <StackPanel Margin="8,0,0,8">
+            <TextBlock Margin="0,0,0,4" Text="Game port" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding GamePort, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding PortTip}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Margin="0,0,0,4" Text="Max players" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding MaxPlayers, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding MaxPlayersTip}" />
+          </StackPanel>
+          <StackPanel Margin="8,0,0,8">
+            <TextBlock Margin="0,0,0,4" Text="Server id" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding ServerId, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding ServerIdTip}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Margin="0,0,0,4" Text="Bind IP" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding SvBind, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding BindTip}" />
+          </StackPanel>
+          <StackPanel Margin="8,0,0,8">
+            <TextBlock Margin="0,0,0,4" Text="Beta branch" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding Beta, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding BetaTip}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Margin="0,0,0,4" Text="Beta password" />
+            <TextBox MinHeight="32" Style="{StaticResource InputBox}" Text="{Binding BetaPassword, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding BetaPasswordTip}" />
+          </StackPanel>
+          <StackPanel Margin="8,8,0,8" VerticalAlignment="Bottom">
+            <CheckBox Content="Whitelisted" IsChecked="{Binding Whitelisted}" ToolTip="{Binding WhitelistTip}" />
+            <CheckBox Margin="0,8,0,0" Content="Grant all guides" IsChecked="{Binding GrantAllGuides}" ToolTip="{Binding GuidesTip}" />
+          </StackPanel>
+        </UniformGrid>
+
+        <WrapPanel Margin="0,4,0,0">
+          <Button Margin="0,0,8,8" Content="Download SteamCMD" Style="{StaticResource ToolbarButton}" Command="{Binding DownloadSteamCmdCommand}" />
+          <Button Margin="0,0,8,8" Content="Install server" Style="{StaticResource PrimaryButton}" Command="{Binding InstallServerCommand}" />
+          <Button Margin="0,0,8,8" Content="Download mods" Style="{StaticResource ToolbarButton}" Command="{Binding DownloadModsCommand}" />
+          <Button Margin="0,0,8,8" Content="Install runtimes" Style="{StaticResource ToolbarButton}" Command="{Binding InstallRuntimesCommand}" />
+          <Button Margin="0,0,8,8" Content="Add firewall rules" Style="{StaticResource ToolbarButton}" Command="{Binding FirewallCommand}" />
+          <Button Margin="0,0,8,8" Content="Remove firewall rules" Style="{StaticResource ToolbarButton}" Command="{Binding RemoveFirewallCommand}" />
+          <Button Margin="0,0,8,8" Content="Write hosting.cfg" Style="{StaticResource ToolbarButton}" Command="{Binding WriteConfigCommand}" />
+          <Button Margin="0,0,8,8" Content="Write start script" Style="{StaticResource PrimaryButton}" Command="{Binding WriteScriptCommand}" />
+          <Button Margin="0,0,8,8" Content="Apply guide setting" Style="{StaticResource ToolbarButton}" Command="{Binding GuidesCommand}" />
+        </WrapPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</Window>

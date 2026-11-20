@@ -36,6 +36,9 @@
         <Separator />
         <MenuItem Header="E_xit" Click="Exit_Click" />
       </MenuItem>
+      <MenuItem Header="_Server">
+        <MenuItem Header="_Download and setup..." Click="Setup_Click" />
+      </MenuItem>
       <MenuItem Header="_Help">
         <MenuItem Header="_About" Click="About_Click" />
       </MenuItem>
