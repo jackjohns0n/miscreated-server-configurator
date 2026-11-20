@@ -20,10 +20,11 @@
     <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="12">
       <DockPanel>
         <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Margin="0,0,0,6" Text="Output" />
+        <!-- TextBox.Text binds TwoWay unless Mode says otherwise. IsReadOnly does not change that, and Log has no public setter. -->
         <TextBox MinHeight="140"
                  IsReadOnly="True"
                  Style="{StaticResource InputBox}"
-                 Text="{Binding Log}"
+                 Text="{Binding Log, Mode=OneWay}"
                  TextWrapping="Wrap"
                  VerticalScrollBarVisibility="Auto" />
       </DockPanel>
