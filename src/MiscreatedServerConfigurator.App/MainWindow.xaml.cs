@@ -246,6 +246,17 @@ public partial class MainWindow : Window
         return true;
     }
 
+    private void Setup_Click(object sender, RoutedEventArgs e)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        var window = new ServerSetupWindow(_model) { Owner = this };
+        window.Show();
+    }
+
     private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
     {
         if (_model is not null && !ConfirmDiscard())
