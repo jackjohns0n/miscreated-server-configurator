@@ -9,8 +9,8 @@ The behavior checklist (SteamCMD, Workshop files, Visual C++ runtimes, firewall 
 You pick one root, for example `D:\MiscreatedServers`. The box starts empty. The app will not use your Documents folder or Program Files as that root.
 
 ```text
+D:\Tools\steamcmd\          app-wide SteamCMD, chosen once, not under the server root
 D:\MiscreatedServers\
-  steamcmd\                 shared SteamCMD, downloaded once from Valve
   MyServer\
     Bin64_dedicated\        dedicated server files (app 302200)
     hosting.cfg             written from the editor, not generated separately
@@ -19,13 +19,15 @@ D:\MiscreatedServers\
     miscreated.db           created by the server the first time it starts
 ```
 
-Each server is `<root>\<server name>\`. SteamCMD lives only in `<root>\steamcmd`.
+Each server is `<root>\<server name>\`. SteamCMD is a separate folder you pick. It is also what later Workshop upload and download features will use. The box starts empty. The app will not use Documents or Program Files.
 
-The root path and the servers you have set up are stored in `%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json`. The theme choice is the separate file `theme.txt` in that same directory.
+If `steamcmd.exe` is already in `<root>\steamcmd` from an older build, the window asks whether to use that folder. It does not move the files.
+
+The server root, the SteamCMD folder, and the known servers are stored together in `%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json` (`steamCmdPath` next to `rootPath`). One settings file is enough; SteamCMD is not a per-server value. The theme choice is the separate file `theme.txt` in that same directory.
 
 ## What the buttons do
 
-**Download SteamCMD** downloads Valve's official `steamcmd.zip` (`https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip`) if `steamcmd.exe` is not already in the shared folder.
+**Download SteamCMD** asks for the SteamCMD folder if it is not set, then downloads Valve's official `steamcmd.zip` (`https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip`) when `steamcmd.exe` is not already there. The zip is deleted after a successful extract. Install server, Download mods, and the start script all use this same folder. If it is unset, those actions ask for it first.
 
 **Install server** runs SteamCMD as:
 
@@ -41,7 +43,7 @@ If that exits with an error, it runs the same command once more. It then checks 
 +login anonymous +workshop_download_item 299740 <id> +quit
 ```
 
-That command does not set `force_install_dir`, so the files land in the shared SteamCMD cache (`steamcmd\steamapps\workshop`). The app then copies each item and `appworkshop_299740.acf` into `<server>\steamapps\workshop` with its own file copy, not robocopy. Whether SteamCMD can download those items straight into the server folder was not confirmed, and this app does not depend on that. Anonymous download of app 299740 is also unverified. If an item is missing from the cache, the log says so.
+That command does not set `force_install_dir`, so the files land in the SteamCMD folder's cache (`steamapps\workshop` under the folder you chose). The app then copies each item and `appworkshop_299740.acf` into `<server>\steamapps\workshop` with its own file copy, not robocopy. Whether SteamCMD can download those items straight into the server folder was not confirmed, and this app does not depend on that. Anonymous download of app 299740 is also unverified. If an item is missing from the cache, the log says so.
 
 **Write hosting.cfg** writes the editor's current document to `<server>\hosting.cfg`. The editor remains the only place that builds that file.
 
@@ -54,7 +56,7 @@ That command does not set `force_install_dir`, so the files land in the shared S
 **Write start script** writes `<server>\StartServer.bat` and does not run it. The script:
 
 - stops when `stop.txt` is in the server folder
-- runs `app_update 302200 validate` through the shared SteamCMD, and retries that update once
+- runs `app_update 302200 validate` through the SteamCMD folder saved in `servers.json`, and retries that update once
 - passes the beta arguments when a beta branch is set
 - deletes and recreates the `Mods` folder
 - starts `Bin64_dedicated\MiscreatedServer.exe` with `-sv_bind`, optional `-mis_whitelist`, `-sv_port`, `-mis_gameserverid` (default 100), `+sv_maxplayers`, `+map`, and `+http_startserver`

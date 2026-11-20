@@ -22,7 +22,9 @@ public sealed class ServerSetupViewModel : ObservableObject
     private readonly IRegistryView _registry;
     private readonly string _storePath;
     private readonly ServerSetupStore _store;
+    private readonly Func<string, string?>? _pickFolder;
     private string _rootPath = string.Empty;
+    private string _steamCmdPath = string.Empty;
     private string _serverName = string.Empty;
     private string _map = "islands";
     private string _gamePort = "64090";
@@ -43,20 +45,24 @@ public sealed class ServerSetupViewModel : ObservableObject
     /// <param name="downloader">Downloads SteamCMD and the Visual C++ installers.</param>
     /// <param name="registry">Detects the Visual C++ runtimes.</param>
     /// <param name="storePath">The <c>servers.json</c> path. Null uses the LocalAppData file.</param>
+    /// <param name="pickFolder">Asks the user for a folder. Null skips the prompt.</param>
     public ServerSetupViewModel(
         MainViewModel editor,
         IProcessRunner processes,
         IFileDownloader downloader,
         IRegistryView registry,
-        string? storePath = null)
+        string? storePath = null,
+        Func<string, string?>? pickFolder = null)
     {
         _editor = editor;
         _processes = processes;
         _downloader = downloader;
         _registry = registry;
+        _pickFolder = pickFolder;
         _storePath = storePath ?? ServerSetupStore.DefaultFilePath();
         _store = ServerSetupStore.Load(_storePath);
         _rootPath = _store.RootPath;
+        _steamCmdPath = _store.SteamCmdPath;
         if (_store.Servers.Count > 0)
         {
             ApplySaved(_store.Servers[0]);
@@ -110,11 +116,18 @@ public sealed class ServerSetupViewModel : ObservableObject
     /// <summary>Servers remembered in <c>servers.json</c>.</summary>
     public IReadOnlyList<SavedServer> KnownServers => _store.Servers.ToList();
 
-    /// <summary>The folder that holds SteamCMD and every server. Empty until the user chooses one.</summary>
+    /// <summary>The folder that holds every server. Empty until the user chooses one. SteamCMD is not stored here.</summary>
     public string RootPath
     {
         get => _rootPath;
         set => SetProperty(ref _rootPath, value);
+    }
+
+    /// <summary>App-wide folder that contains <c>steamcmd.exe</c>. Empty until the user chooses one.</summary>
+    public string SteamCmdPath
+    {
+        get => _steamCmdPath;
+        set => SetProperty(ref _steamCmdPath, value);
     }
 
     /// <summary>Server folder name under the root.</summary>
@@ -335,26 +348,63 @@ public sealed class ServerSetupViewModel : ObservableObject
 
         _store.RootPath = Path.GetFullPath(RootPath.Trim());
         RootPath = _store.RootPath;
-        _store.Save(_storePath);
+        Persist();
         Message = "Saved the server root.";
         Raise(nameof(KnownServers));
     }
 
-    private async Task DownloadSteamCmdAsync()
+    /// <summary>Saves a SteamCMD folder the user picked. An invalid folder is reported and not stored.</summary>
+    /// <param name="path">The folder from the browse dialog.</param>
+    public void UsePickedSteamCmd(string path)
     {
-        if (!ServerLayout.TryValidateRoot(RootPath, out var error))
+        if (!ServerLayout.TryValidateSteamCmdDirectory(path, out var error))
         {
             Message = error;
+            return;
+        }
+
+        AdoptSteamCmd(Path.GetFullPath(path.Trim()));
+        Message = "Saved the SteamCMD folder.";
+    }
+
+    /// <summary>
+    /// If SteamCMD was installed under the server root by an older build, asks whether to use that folder.
+    /// Nothing is moved.
+    /// </summary>
+    public void OfferLegacySteamCmd()
+    {
+        if (ServerLayout.TryValidateSteamCmdDirectory(SteamCmdPath, out _))
+        {
+            return;
+        }
+
+        var legacy = LegacySteamCmdWithExecutable();
+        if (legacy is null)
+        {
+            return;
+        }
+
+        if (AskToUseLegacy(legacy))
+        {
+            AdoptSteamCmd(legacy);
+            Message = "Using the SteamCMD already at " + legacy + ". Nothing was moved.";
+        }
+    }
+
+    private async Task DownloadSteamCmdAsync()
+    {
+        var directory = RequireSteamCmdDirectory();
+        if (directory is null)
+        {
             return;
         }
 
         IsBusy = true;
         try
         {
-            var directory = ServerLayout.SteamCmdDirectory(Path.GetFullPath(RootPath.Trim()));
             AppendLog("SteamCMD folder: " + directory);
             await SteamCmdSetup.EnsureAsync(directory, _downloader, CancellationToken.None).ConfigureAwait(true);
-            AppendLog(File.Exists(ServerLayout.SteamCmdExecutable(Path.GetFullPath(RootPath.Trim())))
+            AppendLog(File.Exists(ServerLayout.SteamCmdExecutable(directory))
                 ? "steamcmd.exe is ready."
                 : "steamcmd.exe was not found after the download.");
             Message = null;
@@ -372,7 +422,7 @@ public sealed class ServerSetupViewModel : ObservableObject
 
     private async Task InstallServerAsync()
     {
-        if (!TryPaths(out var root, out var serverDirectory, out var settings))
+        if (!TryPaths(out _, out var serverDirectory, out var settings))
         {
             return;
         }
@@ -380,9 +430,15 @@ public sealed class ServerSetupViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            var steamCmdDirectory = RequireSteamCmdDirectory();
+            if (steamCmdDirectory is null)
+            {
+                return;
+            }
+
             Directory.CreateDirectory(serverDirectory);
-            var steamCmd = ServerLayout.SteamCmdExecutable(root);
-            await SteamCmdSetup.EnsureAsync(ServerLayout.SteamCmdDirectory(root), _downloader, CancellationToken.None).ConfigureAwait(true);
+            var steamCmd = ServerLayout.SteamCmdExecutable(steamCmdDirectory);
+            await SteamCmdSetup.EnsureAsync(steamCmdDirectory, _downloader, CancellationToken.None).ConfigureAwait(true);
             var arguments = SteamCmdArguments.DedicatedServerUpdate(serverDirectory, settings.Beta, settings.BetaPassword);
             AppendLog("steamcmd " + SteamCmdArguments.DedicatedServerUpdate(serverDirectory, settings.Beta, string.IsNullOrEmpty(settings.BetaPassword) ? null : "(password hidden)"));
             var code = await RunSteamCmdAsync(steamCmd, arguments).ConfigureAwait(true);
@@ -415,7 +471,7 @@ public sealed class ServerSetupViewModel : ObservableObject
 
     private async Task DownloadModsAsync()
     {
-        if (!TryPaths(out var root, out var serverDirectory, out _))
+        if (!TryPaths(out _, out var serverDirectory, out _))
         {
             return;
         }
@@ -436,8 +492,14 @@ public sealed class ServerSetupViewModel : ObservableObject
                 return;
             }
 
-            var steamCmd = ServerLayout.SteamCmdExecutable(root);
-            await SteamCmdSetup.EnsureAsync(ServerLayout.SteamCmdDirectory(root), _downloader, CancellationToken.None).ConfigureAwait(true);
+            var steamCmdDirectory = RequireSteamCmdDirectory();
+            if (steamCmdDirectory is null)
+            {
+                return;
+            }
+
+            var steamCmd = ServerLayout.SteamCmdExecutable(steamCmdDirectory);
+            await SteamCmdSetup.EnsureAsync(steamCmdDirectory, _downloader, CancellationToken.None).ConfigureAwait(true);
             foreach (var id in read.Ids)
             {
                 var arguments = SteamCmdArguments.WorkshopDownload(id);
@@ -450,7 +512,7 @@ public sealed class ServerSetupViewModel : ObservableObject
                 }
             }
 
-            foreach (var error in WorkshopCopier.Copy(ServerLayout.SteamCmdDirectory(root), serverDirectory, read.Ids))
+            foreach (var error in WorkshopCopier.Copy(steamCmdDirectory, serverDirectory, read.Ids))
             {
                 AppendLog(error);
             }
@@ -575,7 +637,7 @@ public sealed class ServerSetupViewModel : ObservableObject
 
     private async Task WriteScriptAsync()
     {
-        if (!TryPaths(out var root, out var serverDirectory, out var settings))
+        if (!TryPaths(out _, out var serverDirectory, out var settings))
         {
             return;
         }
@@ -594,7 +656,13 @@ public sealed class ServerSetupViewModel : ObservableObject
         }
 
         Directory.CreateDirectory(serverDirectory);
-        var text = StartScript.Generate(serverDirectory, ServerLayout.SteamCmdExecutable(root), settings);
+        var steamCmdDirectory = RequireSteamCmdDirectory();
+        if (steamCmdDirectory is null)
+        {
+            return;
+        }
+
+        var text = StartScript.Generate(serverDirectory, ServerLayout.SteamCmdExecutable(steamCmdDirectory), settings);
         await File.WriteAllTextAsync(scriptPath, text).ConfigureAwait(true);
         Remember(settings);
         AppendLog("Wrote " + scriptPath + ". Start the server by running that file. This app will not run it.");
@@ -716,10 +784,91 @@ public sealed class ServerSetupViewModel : ObservableObject
 
     private void Remember(LaunchSettings settings)
     {
-        _store.RootPath = Path.GetFullPath(RootPath.Trim());
+        if (ServerLayout.TryValidateRoot(RootPath, out _))
+        {
+            _store.RootPath = Path.GetFullPath(RootPath.Trim());
+        }
+
         _store.Remember(ServerName.Trim(), settings);
-        _store.Save(_storePath);
+        Persist();
         Raise(nameof(KnownServers));
+    }
+
+    private string? RequireSteamCmdDirectory()
+    {
+        if (ServerLayout.TryValidateSteamCmdDirectory(SteamCmdPath, out _))
+        {
+            var full = Path.GetFullPath(SteamCmdPath.Trim());
+            AdoptSteamCmd(full);
+            return full;
+        }
+
+        var legacy = LegacySteamCmdWithExecutable();
+        if (legacy is not null && AskToUseLegacy(legacy))
+        {
+            AdoptSteamCmd(legacy);
+            return legacy;
+        }
+
+        MessageBox.Show(
+            "Choose a folder for SteamCMD. It is separate from the server root, and the app does not pick Documents or Program Files.",
+            "SteamCMD",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+        var picked = _pickFolder?.Invoke("Choose the SteamCMD folder");
+        if (string.IsNullOrWhiteSpace(picked))
+        {
+            Message = "SteamCMD folder was not chosen.";
+            return null;
+        }
+
+        if (!ServerLayout.TryValidateSteamCmdDirectory(picked, out var error))
+        {
+            Message = error;
+            return null;
+        }
+
+        var chosen = Path.GetFullPath(picked.Trim());
+        AdoptSteamCmd(chosen);
+        return chosen;
+    }
+
+    private string? LegacySteamCmdWithExecutable()
+    {
+        if (!ServerLayout.TryValidateRoot(RootPath, out _))
+        {
+            return null;
+        }
+
+        var legacy = ServerLayout.LegacySteamCmdDirectory(Path.GetFullPath(RootPath.Trim()));
+        return File.Exists(ServerLayout.SteamCmdExecutable(legacy)) ? legacy : null;
+    }
+
+    private static bool AskToUseLegacy(string legacy)
+    {
+        return MessageBox.Show(
+            "SteamCMD is already at " + legacy + ". Use that folder for the app? Nothing will be moved.",
+            "SteamCMD",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question) == MessageBoxResult.Yes;
+    }
+
+    private void AdoptSteamCmd(string directory)
+    {
+        SteamCmdPath = directory;
+        _store.SteamCmdPath = directory;
+        Persist();
+    }
+
+    private void Persist()
+    {
+        if (ServerLayout.TryValidateSteamCmdDirectory(SteamCmdPath, out _))
+        {
+            _store.SteamCmdPath = Path.GetFullPath(SteamCmdPath.Trim());
+            SteamCmdPath = _store.SteamCmdPath;
+        }
+
+        _store.Save(_storePath);
     }
 
     private static string? FindScript(string serverDirectory)

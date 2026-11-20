@@ -25,7 +25,7 @@ Not built yet:
 - Open a `hosting.cfg`, or start from the commented reference template in `samples/hosting.cfg`.
 - Edit values by section: Core, Logging, Ping, Steam, Weather, Game Rules & Player, AI, Factions, and the faction damage matrix.
 - On Weather, the day/night panel is the only place to edit `wm_timeScale` and `wm_timeScaleNight`. Enter real hours, or edit the scales; each side updates the other. Apply writes them when both are valid. Clearing a box does not change the file. See `docs/day-night-calculator.md`.
-- Server → Download and setup downloads SteamCMD once, installs dedicated server app 302200, copies Workshop mods from `steam_ugc`, checks the Visual C++ x64 runtimes, and can add firewall rules. It writes `StartServer.bat` and does not launch the server. See `docs/server-setup.md`.
+- Server → Download and setup asks for an app-wide SteamCMD folder (not under the server root), installs dedicated server app 302200, copies Workshop mods from `steam_ugc`, checks the Visual C++ x64 runtimes, and can add firewall rules. It writes `StartServer.bat` and does not launch the server. See `docs/server-setup.md`.
 - `http_password` and `sv_servername` are marked required. Passwords and `sv_steamWebAPIKey` are masked.
 - `steam_ugc` is edited as a list of Workshop file ids. Paste a numeric id or a Workshop URL. The file is written as comma-separated ids with no spaces.
 - Unused CVARs can be commented out or left out of the file. Either way the server keeps its stock value.
@@ -41,7 +41,7 @@ The catalog is built from `samples/hosting.cfg` (the 13 November 2026 reference 
 
 Server → Download and setup installs a dedicated server and writes a start script. The steps follow the same kind of checklist community setup scripts use (SteamCMD app 302200, Workshop files copied in beside the server, the Visual C++ x64 runtimes, firewall ports, a grant-all-guides database trigger, and a generated start script). Spafbi's setup scripts were the behavior checklist for that list. They are unlicensed and were not copied. The script and the C# that drives SteamCMD are original to this project.
 
-Settings for the root folder and known servers are stored in `%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json`. The theme choice remains `%LOCALAPPDATA%\MiscreatedServerConfigurator\theme.txt`. The app never fills in Documents or Program Files as the server root.
+The server root, the SteamCMD folder, and known servers are stored in `%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json`. SteamCMD is app-wide, so its path sits next to the server root in that file rather than in a second settings file. The theme choice remains `%LOCALAPPDATA%\MiscreatedServerConfigurator\theme.txt`. The app never fills in Documents or Program Files for either folder.
 
 The full walkthrough, including Load server and the ports that get opened, is in [docs/server-setup.md](docs/server-setup.md).
 

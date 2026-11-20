@@ -21,9 +21,25 @@ public partial class ServerSetupWindow : Window
     /// <param name="editor">The hosting.cfg editor.</param>
     public ServerSetupWindow(MainViewModel editor)
     {
-        _model = new ServerSetupViewModel(editor, new ProcessRunner(), new HttpFileDownloader(), new WindowsRegistryView());
+        _model = new ServerSetupViewModel(
+            editor,
+            new ProcessRunner(),
+            new HttpFileDownloader(),
+            new WindowsRegistryView(),
+            pickFolder: BrowseFolder);
         DataContext = _model;
         InitializeComponent();
+        Loaded += (_, _) => _model.OfferLegacySteamCmd();
+    }
+
+    private string? BrowseFolder(string title)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = title,
+            Multiselect = false,
+        };
+        return dialog.ShowDialog(this) == true ? dialog.FolderName : null;
     }
 
     private void BrowseRoot_Click(object sender, RoutedEventArgs e)
@@ -36,6 +52,15 @@ public partial class ServerSetupWindow : Window
         if (dialog.ShowDialog(this) == true)
         {
             _model.RootPath = dialog.FolderName;
+        }
+    }
+
+    private void BrowseSteamCmd_Click(object sender, RoutedEventArgs e)
+    {
+        var folder = BrowseFolder("Choose the SteamCMD folder");
+        if (!string.IsNullOrWhiteSpace(folder))
+        {
+            _model.UsePickedSteamCmd(folder);
         }
     }
 

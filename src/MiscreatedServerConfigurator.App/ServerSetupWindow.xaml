@@ -15,7 +15,7 @@
     <TextBlock DockPanel.Dock="Top"
                Style="{StaticResource MutedText}"
                Margin="0,0,0,12"
-               Text="Downloads a dedicated server into a folder you choose and writes StartServer.bat. This window does not start the server." />
+               Text="Downloads a dedicated server into a folder you choose and writes StartServer.bat. SteamCMD is a separate app folder. This window does not start the server." />
 
     <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="12">
       <DockPanel>
@@ -50,8 +50,24 @@
                   Command="{Binding SaveRootCommand}" />
           <TextBox MinHeight="32"
                    Style="{StaticResource InputBox}"
-                   ToolTip="A folder such as D:\MiscreatedServers. One SteamCMD install is shared. Each server is a subfolder. This is not filled in for you."
+                   ToolTip="A folder such as D:\MiscreatedServers. Each server is a subfolder. This is not filled in for you, and it is not where SteamCMD is installed."
                    Text="{Binding RootPath, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+
+        <TextBlock Margin="0,8,0,4" FontWeight="SemiBold" Text="SteamCMD" />
+        <TextBlock Style="{StaticResource MutedText}"
+                   Margin="0,0,0,4"
+                   Text="App-wide folder for steamcmd.exe. Not inside the server root. Used for server installs, Workshop downloads, and the start script." />
+        <DockPanel Margin="0,0,0,8">
+          <Button DockPanel.Dock="Right"
+                  Margin="8,0,0,0"
+                  Content="Browse"
+                  Style="{StaticResource ToolbarButton}"
+                  Click="BrowseSteamCmd_Click" />
+          <TextBox MinHeight="32"
+                   Style="{StaticResource InputBox}"
+                   ToolTip="Choose this once. The app does not pick Documents or Program Files. If an older install is under the server root, you can point here instead of moving it."
+                   Text="{Binding SteamCmdPath, UpdateSourceTrigger=PropertyChanged}" />
         </DockPanel>
 
         <TextBlock Margin="0,8,0,4" FontWeight="SemiBold" Text="Known servers" />

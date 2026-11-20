@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- SteamCMD is an app-wide folder, chosen once and stored as `steamCmdPath` in `%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json`. It is not installed under the server root. Server installs, Workshop downloads, and `StartServer.bat` all use that path. An older `<root>\steamcmd` install can be selected in place; files are not moved. `steamcmd.zip` is deleted after a successful extract.
 - Theme setting: Dark, Light, or Follow system. Follow system is the default and updates when the Windows app theme changes. The choice is saved for the next launch.
 
 ### Fixed

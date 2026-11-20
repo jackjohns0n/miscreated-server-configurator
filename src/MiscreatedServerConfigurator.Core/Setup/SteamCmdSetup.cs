@@ -30,5 +30,7 @@ public static class SteamCmdSetup
         {
             throw new InvalidOperationException("The SteamCMD zip did not contain steamcmd.exe.");
         }
+
+        File.Delete(zipPath);
     }
 }

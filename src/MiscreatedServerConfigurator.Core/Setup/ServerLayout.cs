@@ -5,7 +5,7 @@ namespace MiscreatedServerConfigurator.Core.Setup;
 /// </summary>
 public static class ServerLayout
 {
-    /// <summary>Shared SteamCMD directory name under the root. Downloaded once.</summary>
+    /// <summary>Folder name used by older builds that placed SteamCMD under the server root. New installs do not use it.</summary>
     public const string SteamCmdDirectoryName = "steamcmd";
 
     /// <summary>Start script written into each server folder. The app does not launch it.</summary>
@@ -20,20 +20,23 @@ public static class ServerLayout
     /// <summary>Workshop manifest copied next to the downloaded items.</summary>
     public const string WorkshopManifestFileName = "appworkshop_299740.acf";
 
-    /// <summary>Shared SteamCMD folder for <paramref name="root"/>.</summary>
-    /// <param name="root">The folder that holds every server and the one SteamCMD install.</param>
-    /// <returns>The steamcmd directory path.</returns>
-    public static string SteamCmdDirectory(string root)
+    /// <summary>
+    /// <c>&lt;root&gt;\steamcmd</c>, where an earlier build installed SteamCMD.
+    /// The app does not download there anymore. It only offers this folder when <c>steamcmd.exe</c> is already present.
+    /// </summary>
+    /// <param name="serverRoot">The server root.</param>
+    /// <returns>The old SteamCMD directory.</returns>
+    public static string LegacySteamCmdDirectory(string serverRoot)
     {
-        return Path.Combine(root, SteamCmdDirectoryName);
+        return Path.Combine(serverRoot, SteamCmdDirectoryName);
     }
 
-    /// <summary><c>steamcmd.exe</c> inside the shared install.</summary>
-    /// <param name="root">The server root.</param>
+    /// <summary><c>steamcmd.exe</c> inside a SteamCMD folder the user chose.</summary>
+    /// <param name="steamCmdDirectory">The app-wide SteamCMD folder.</param>
     /// <returns>The executable path.</returns>
-    public static string SteamCmdExecutable(string root)
+    public static string SteamCmdExecutable(string steamCmdDirectory)
     {
-        return Path.Combine(SteamCmdDirectory(root), "steamcmd.exe");
+        return Path.Combine(steamCmdDirectory, "steamcmd.exe");
     }
 
     /// <summary>One server's folder, <c>&lt;root&gt;\&lt;name&gt;</c>.</summary>
@@ -62,22 +65,39 @@ public static class ServerLayout
     /// <returns><see langword="true"/> when the folder may be used.</returns>
     public static bool TryValidateRoot(string? path, out string? error)
     {
+        return TryValidateChosenFolder(path, "the servers", @"D:\MiscreatedServers", out error);
+    }
+
+    /// <summary>
+    /// Rejects an empty SteamCMD path, a relative path, Program Files, and the Documents folder itself.
+    /// The box starts empty. SteamCMD is not placed under the server root.
+    /// </summary>
+    /// <param name="path">The proposed SteamCMD folder.</param>
+    /// <param name="error">Why it was rejected, or null.</param>
+    /// <returns><see langword="true"/> when the folder may be used.</returns>
+    public static bool TryValidateSteamCmdDirectory(string? path, out string? error)
+    {
+        return TryValidateChosenFolder(path, "SteamCMD", @"D:\Tools\steamcmd", out error);
+    }
+
+    private static bool TryValidateChosenFolder(string? path, string purpose, string example, out string? error)
+    {
         if (string.IsNullOrWhiteSpace(path))
         {
-            error = "Choose a folder for the servers. The app does not pick Documents or Program Files.";
+            error = "Choose a folder for " + purpose + ". The app does not pick Documents or Program Files.";
             return false;
         }
 
         var full = Path.GetFullPath(path.Trim());
         if (!Path.IsPathRooted(full))
         {
-            error = "Use a full path, for example D:\\MiscreatedServers.";
+            error = "Use a full path, for example " + example + ".";
             return false;
         }
 
         if (IsProgramFiles(full) || IsDocumentsFolder(full))
         {
-            error = "That folder is Documents or Program Files. Choose another folder, such as D:\\MiscreatedServers.";
+            error = "That folder is Documents or Program Files. Choose another folder, such as " + example + ".";
             return false;
         }
 

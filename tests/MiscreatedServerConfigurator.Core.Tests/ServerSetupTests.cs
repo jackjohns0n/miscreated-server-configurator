@@ -1,8 +1,68 @@
+using System.IO.Compression;
+
 using Microsoft.Data.Sqlite;
 
 using MiscreatedServerConfigurator.Core.Setup;
 
 namespace MiscreatedServerConfigurator.Core.Tests;
+
+public sealed class SteamCmdSetupTests
+{
+    [Fact]
+    public async Task Successful_extract_deletes_the_zip()
+    {
+        var directory = Directory.CreateTempSubdirectory("steamcmd-");
+        var sourceZip = Path.Combine(directory.FullName, "source.zip");
+        using (var archive = ZipFile.Open(sourceZip, ZipArchiveMode.Create))
+        {
+            var entry = archive.CreateEntry("steamcmd.exe");
+            using var writer = new StreamWriter(entry.Open());
+            writer.Write("stub");
+        }
+
+        await SteamCmdSetup.EnsureAsync(directory.FullName, new CopyDownloader(sourceZip), CancellationToken.None);
+
+        Assert.True(File.Exists(Path.Combine(directory.FullName, "steamcmd.exe")));
+        Assert.False(File.Exists(Path.Combine(directory.FullName, "steamcmd.zip")));
+    }
+
+    private sealed class CopyDownloader : IFileDownloader
+    {
+        private readonly string _source;
+
+        public CopyDownloader(string source)
+        {
+            _source = source;
+        }
+
+        public Task DownloadAsync(Uri url, string destinationFile, CancellationToken cancellationToken)
+        {
+            File.Copy(_source, destinationFile, overwrite: true);
+            return Task.CompletedTask;
+        }
+    }
+}
+
+public sealed class ServerSetupStoreTests
+{
+    [Fact]
+    public void Steamcmd_path_round_trips_beside_the_server_root()
+    {
+        var directory = Directory.CreateTempSubdirectory("servers-json-");
+        var path = Path.Combine(directory.FullName, "servers.json");
+        var store = new ServerSetupStore
+        {
+            RootPath = @"D:\MiscreatedServers",
+            SteamCmdPath = @"D:\Tools\steamcmd",
+        };
+        store.Save(path);
+
+        var loaded = ServerSetupStore.Load(path);
+
+        Assert.Equal(@"D:\MiscreatedServers", loaded.RootPath);
+        Assert.Equal(@"D:\Tools\steamcmd", loaded.SteamCmdPath);
+    }
+}
 
 public sealed class SteamCmdArgumentsTests
 {
@@ -60,7 +120,7 @@ public sealed class StartScriptTests
             BetaPassword = "secret",
         };
 
-        var text = StartScript.Generate(@"D:\MiscreatedServers\One", @"D:\MiscreatedServers\steamcmd\steamcmd.exe", settings);
+        var text = StartScript.Generate(@"D:\MiscreatedServers\One", @"D:\Tools\steamcmd\steamcmd.exe", settings);
         var lines = text.Split(new[] { "\r\n" }, StringSplitOptions.None);
         var nonEmpty = lines.Count(line => line.Length > 0);
         Assert.InRange(nonEmpty, 20, 40);
@@ -69,6 +129,9 @@ public sealed class StartScriptTests
         Assert.True(parsed.IsOurs);
         Assert.Empty(parsed.Skipped);
         Assert.Equal(@"D:\MiscreatedServers\One", parsed.ServerDirectory);
+        Assert.Equal(@"D:\Tools\steamcmd\steamcmd.exe", parsed.SteamCmdPath);
+        Assert.Contains("set \"STEAMCMD=D:\\Tools\\steamcmd\\steamcmd.exe\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"D:\MiscreatedServers\steamcmd", text, StringComparison.Ordinal);
         Assert.Equal("islands", parsed.Settings.Map);
         Assert.Equal(64090, parsed.Settings.GamePort);
         Assert.Equal(40, parsed.Settings.MaxPlayers);
@@ -241,6 +304,16 @@ public sealed class ServerLayoutTests
         {
             Assert.False(ServerLayout.TryValidateRoot(programFiles, out _));
         }
+    }
+
+    [Fact]
+    public void Legacy_steamcmd_folder_stays_under_the_server_root()
+    {
+        Assert.Equal(
+            Path.Combine(@"D:\MiscreatedServers", "steamcmd"),
+            ServerLayout.LegacySteamCmdDirectory(@"D:\MiscreatedServers"));
+        Assert.False(ServerLayout.TryValidateSteamCmdDirectory("  ", out var error));
+        Assert.Contains("SteamCMD", error, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -14,8 +14,9 @@ public sealed class SavedServer
 }
 
 /// <summary>
-/// The root folder and the servers the app knows about.
+/// The server root, the app-wide SteamCMD folder, and the servers the app knows about.
 /// Stored at <c>%LOCALAPPDATA%\MiscreatedServerConfigurator\servers.json</c>.
+/// SteamCMD is not a per-server path, but it lives in this file so setup has one settings file.
 /// The theme choice is a separate file, <c>theme.txt</c>, in that same directory.
 /// </summary>
 public sealed class ServerSetupStore
@@ -29,6 +30,12 @@ public sealed class ServerSetupStore
 
     /// <summary>The chosen root. Empty until the user picks one.</summary>
     public string RootPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Folder that contains <c>steamcmd.exe</c>. Empty until the user picks one.
+    /// Independent of <see cref="RootPath"/>. Never filled in as Documents or Program Files.
+    /// </summary>
+    public string SteamCmdPath { get; set; } = string.Empty;
 
     /// <summary>Servers recorded under <see cref="RootPath"/>.</summary>
     public List<SavedServer> Servers { get; set; } = new();

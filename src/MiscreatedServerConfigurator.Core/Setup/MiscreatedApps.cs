@@ -12,7 +12,7 @@ public static class MiscreatedApps
     public const int GameAppId = 299740;
 
     /// <summary>
-    /// Valve's published SteamCMD zip. One copy is extracted into <c>&lt;root&gt;\steamcmd</c>.
+    /// Valve's published SteamCMD zip. Extracted into the SteamCMD folder the user chose, which is not the server root.
     /// </summary>
     public static readonly Uri SteamCmdZipUrl = new("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip");
 }
