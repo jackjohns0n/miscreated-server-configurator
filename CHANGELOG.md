@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Write hosting.cfg always logs what it did. It copies the editor's current document, including an unsaved new one, into an installed server folder. If the editor is empty or `Bin64_dedicated\MiscreatedServer.exe` is missing, the Output box says why and no file or folder is created.
+- Write start script and Write hosting.cfg refuse a folder that is not an installed server, and they do not add a new saved server. Install server is what records a server.
 - Install server shows SteamCMD download progress while it runs. Carriage-return updates replace the current progress line and fill a percentage bar. If the console stays quiet, the window follows `steamcmd\logs\content_log.txt`. The output ends with a line saying whether `MiscreatedServer.exe` is present.
 - Server → Download and setup no longer crashes while the window opens. The output box was bound two-way to the read-only log, which WPF rejects even when the box is marked read-only.
 - Clearing or invalidating a day or night length no longer leaves the previous `wm_timeScale` and `wm_timeScaleNight` numbers on screen. The pending scales clear, the line under the boxes says what is missing, and Apply stays off. The file is unchanged until Apply, and the saved values stay on their own line. The same rules apply when a scale box is cleared.

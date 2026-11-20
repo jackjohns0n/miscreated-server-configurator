@@ -45,7 +45,9 @@ If that exits with an error, it runs the same command once more. Download progre
 
 That command does not set `force_install_dir`, so the files land in the SteamCMD folder's cache (`steamapps\workshop` under the folder you chose). The app then copies each item and `appworkshop_299740.acf` into `<server>\steamapps\workshop` with its own file copy, not robocopy. Whether SteamCMD can download those items straight into the server folder was not confirmed, and this app does not depend on that. Anonymous download of app 299740 is also unverified. If an item is missing from the cache, the log says so.
 
-**Write hosting.cfg** writes the editor's current document to `<server>\hosting.cfg`. The editor remains the only place that builds that file.
+**Write hosting.cfg** copies the document open in the editor, including an unsaved "New hosting.cfg", to `<server>\hosting.cfg` and logs that path. The editor remains the only place that builds that file. If the editor has no text, or the folder has no `Bin64_dedicated\MiscreatedServer.exe`, the Output box says why and nothing is created.
+
+**Write start script** has the same installed-server check. Neither button adds a new entry to the known-server list. Install server is what records a server.
 
 **Install runtimes** looks in the registry for the x64 Visual C++ 2012, 2013, and 2015-or-later runtimes (`VC\Runtimes\x64`, Installed = 1). If one is missing, the window tells you which official Microsoft installer it will download and why. 2012 and 2013 are run with `/quiet /norestart`. The 2015-or-later installer is run with `/install /quiet /norestart`, because the older installers do not accept `/install`. winget is not used. A declined administrator prompt leaves the machine unchanged.
 

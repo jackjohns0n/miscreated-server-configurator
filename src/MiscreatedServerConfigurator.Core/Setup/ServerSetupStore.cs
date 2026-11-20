@@ -88,6 +88,25 @@ public sealed class ServerSetupStore
         File.WriteAllText(path, JsonSerializer.Serialize(this, JsonOptions));
     }
 
+    /// <summary>
+    /// Updates launch settings for a server that is already in the list.
+    /// Does not add a new entry.
+    /// </summary>
+    /// <param name="name">The folder name.</param>
+    /// <param name="launch">The launch settings to store.</param>
+    /// <returns><see langword="true"/> when an existing entry was updated.</returns>
+    public bool TryUpdateExisting(string name, LaunchSettings launch)
+    {
+        var existing = Servers.Find(server => string.Equals(server.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (existing is null)
+        {
+            return false;
+        }
+
+        existing.Launch = launch.Clone();
+        return true;
+    }
+
     /// <summary>Inserts or replaces a server by folder name.</summary>
     /// <param name="name">The folder name.</param>
     /// <param name="launch">The launch settings to remember.</param>

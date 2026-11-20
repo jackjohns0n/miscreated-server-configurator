@@ -291,6 +291,55 @@ public sealed class GrantGuidesTests
     }
 }
 
+public sealed class InstalledServerWriteTests
+{
+    [Fact]
+    public void Hosting_cfg_is_refused_when_the_editor_has_nothing_and_when_the_server_is_not_installed()
+    {
+        var directory = Directory.CreateTempSubdirectory("write-cfg-");
+
+        Assert.False(InstalledServerWrite.TryAllow(directory.FullName, "   ", requireEditorText: true, out var empty));
+        Assert.Equal(InstalledServerWrite.NothingLoaded, empty);
+        Assert.False(Directory.Exists(Path.Combine(directory.FullName, "Bin64_dedicated")));
+
+        Assert.False(InstalledServerWrite.TryAllow(directory.FullName, "sv_port=64090", requireEditorText: true, out var missing));
+        Assert.Equal(InstalledServerWrite.NotInstalled, missing);
+        Assert.False(File.Exists(Path.Combine(directory.FullName, ServerLayout.HostingConfigFileName)));
+    }
+
+    [Fact]
+    public void Writes_are_allowed_only_after_the_dedicated_executable_exists()
+    {
+        var directory = Directory.CreateTempSubdirectory("write-ok-");
+        var executable = Path.Combine(directory.FullName, "Bin64_dedicated", "MiscreatedServer.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(executable)!);
+        File.WriteAllText(executable, "not a real server");
+
+        Assert.True(InstalledServerWrite.TryAllow(directory.FullName, "sv_port=64090", requireEditorText: true, out var cfgError));
+        Assert.Null(cfgError);
+        Assert.True(InstalledServerWrite.TryAllow(directory.FullName, editorText: null, requireEditorText: false, out var scriptError));
+        Assert.Null(scriptError);
+    }
+
+    [Fact]
+    public void Updating_launch_settings_does_not_add_a_new_saved_server()
+    {
+        var store = new ServerSetupStore();
+        store.Remember("TestServer1", LaunchSettings.CreateDefault());
+        var changed = LaunchSettings.CreateDefault();
+        changed.GamePort = 64100;
+
+        Assert.False(store.TryUpdateExisting("lTestServer1", changed));
+        Assert.Single(store.Servers);
+        Assert.Equal("TestServer1", store.Servers[0].Name);
+        Assert.Equal(64090, store.Servers[0].Launch.GamePort);
+
+        Assert.True(store.TryUpdateExisting("TestServer1", changed));
+        Assert.Single(store.Servers);
+        Assert.Equal(64100, store.Servers[0].Launch.GamePort);
+    }
+}
+
 public sealed class ServerLayoutTests
 {
     [Fact]

@@ -664,6 +664,7 @@ public sealed class ServerSetupViewModel : ObservableObject
     {
         if (!TryPaths(out _, out var serverDirectory, out var settings))
         {
+            AppendLog(Message ?? "Could not write the start script.");
             return;
         }
 
@@ -675,22 +676,41 @@ public sealed class ServerSetupViewModel : ObservableObject
             if (warning is not null
                 && MessageBox.Show(warning, "Start script", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             {
-                Message = "The start script was not changed.";
+                Report("The start script was not changed.");
                 return;
             }
         }
 
-        Directory.CreateDirectory(serverDirectory);
+        if (!InstalledServerWrite.TryAllow(serverDirectory, editorText: null, requireEditorText: false, out var refused))
+        {
+            Report(refused ?? InstalledServerWrite.NotInstalled);
+            return;
+        }
+
         var steamCmdDirectory = RequireSteamCmdDirectory();
         if (steamCmdDirectory is null)
         {
+            AppendLog(Message ?? "SteamCMD folder was not chosen, so the start script was not written.");
             return;
         }
 
         var text = StartScript.Generate(serverDirectory, ServerLayout.SteamCmdExecutable(steamCmdDirectory), settings);
-        await File.WriteAllTextAsync(scriptPath, text).ConfigureAwait(true);
-        Remember(settings);
-        AppendLog("Wrote " + scriptPath + ". Start the server by running that file. This app will not run it.");
+        try
+        {
+            await File.WriteAllTextAsync(scriptPath, text).ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Report("Could not write the start script. " + ex.Message);
+            return;
+        }
+        if (_store.TryUpdateExisting(ServerName.Trim(), settings))
+        {
+            Persist();
+            Raise(nameof(KnownServers));
+        }
+
+        Report("Wrote " + scriptPath + ". Start the server by running that file. This app will not run it.");
         var database = GrantGuides.DatabasePath(serverDirectory);
         if (settings.GrantAllGuides || File.Exists(database))
         {
@@ -705,13 +725,45 @@ public sealed class ServerSetupViewModel : ObservableObject
     {
         if (!TryPaths(out _, out var serverDirectory, out _))
         {
+            AppendLog(Message ?? "Could not write hosting.cfg.");
             return;
         }
 
-        Directory.CreateDirectory(serverDirectory);
+        string text;
+        try
+        {
+            text = _editor.BuildText();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException)
+        {
+            Report("Could not read the editor document, so hosting.cfg was not written. " + ex.Message);
+            return;
+        }
+
+        if (!InstalledServerWrite.TryAllow(serverDirectory, text, requireEditorText: true, out var refused))
+        {
+            Report(refused ?? InstalledServerWrite.NotInstalled);
+            return;
+        }
+
         var path = Path.Combine(serverDirectory, ServerLayout.HostingConfigFileName);
-        HostingConfigFile.Write(path, _editor.BuildText());
-        Message = "Wrote the editor's hosting.cfg to " + path + ".";
+        try
+        {
+            HostingConfigFile.Write(path, text);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Report("Could not write hosting.cfg. " + ex.Message);
+            return;
+        }
+
+        Report("Wrote the editor's hosting.cfg to " + path + ".");
+    }
+
+    private void Report(string text)
+    {
+        Message = text;
+        AppendLog(text);
     }
 
     private void ApplyGuidesNow()
